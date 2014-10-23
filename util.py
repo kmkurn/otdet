@@ -6,6 +6,8 @@ import re
 
 def pick(filenames, k=None, randomized=True):
     """Pick some thread files from a thread directory."""
+    if k is not None and k < 0:
+        raise ValueError('k should be non-negative')
     if randomized:
         random.shuffle(filenames)
     else:
