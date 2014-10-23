@@ -3,7 +3,8 @@ Anomalous text detection methods.
 """
 
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
+import scipy.spatial.distance as dist
+from sklearn.cross_validation import LeaveOneOut
 
 
 def clust_dist(X, metric='euclidean'):
@@ -42,4 +43,15 @@ def clust_dist(X, metric='euclidean'):
        University of Sheffield.
        Retrieved from http://nlp.shef.ac.uk/talks/Guthrie_20081127.pdf
     """
-    return np.mean(squareform(pdist(X, metric)), axis=0)
+    return np.mean(dist.squareform(dist.pdist(X, metric)), axis=0)
+
+
+def mean_comp(X, metric='euclidean'):
+    """Compute the distance between each vector to its complement vector."""
+    m = X.shape[0]
+    res = np.zeros(m)
+    for i, (comp, vec) in enumerate(LeaveOneOut(m)):
+        v, u = np.mean(X[comp], axis=0), np.ravel(X[vec])
+        distfunc = getattr(dist, metric)
+        res[i] = distfunc(u, v)
+    return res
