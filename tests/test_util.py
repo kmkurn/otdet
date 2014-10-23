@@ -1,14 +1,32 @@
 import util
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_true, raises
 
 
 class TestPick():
-    def check(self, filenames, expected, k, randomized):
-        result = util.pick(filenames, k, randomized)
-        assert_equal(result, expected)
-
     def test_all_sequential(self):
         filenames = ['a-4.txt', 'b-2.txt', 'c-3.txt', 'd-1.txt', 'e-0.txt']
         expected = ['e-0.txt', 'd-1.txt', 'b-2.txt', 'c-3.txt', 'a-4.txt']
-        self.check(filenames, expected, k=None, randomized=False)
+        result = util.pick(filenames, randomized=False)
+        assert_equal(result, expected)
+
+    def test_k_sequential(self):
+        filenames = ['a-4.txt', 'b-2.txt', 'c-3.txt', 'd-1.txt', 'e-0.txt']
+        expected = ['e-0.txt', 'd-1.txt', 'b-2.txt']
+        result = util.pick(filenames, k=3, randomized=False)
+        assert_equal(result, expected)
+
+    def test_all_random(self):
+        filenames = ['a-4.txt', 'b-2.txt', 'c-3.txt', 'd-1.txt', 'e-0.txt']
+        result = util.pick(filenames)
+        assert_equal(sorted(filenames), sorted(result))
+
+    def test_k_random(self):
+        filenames = ['a-4.txt', 'b-2.txt', 'c-3.txt', 'd-1.txt', 'e-0.txt']
+        result = util.pick(filenames, k=3)
+        for r in result:
+            assert_true(r in filenames)
+
+    @raises(ValueError)
+    def test_negative_k(self):
+        util.pick([], k=-2)
