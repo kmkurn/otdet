@@ -5,6 +5,7 @@ Anomalous text detection methods.
 import numpy as np
 import scipy.spatial.distance as dist
 from sklearn.cross_validation import LeaveOneOut
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 def clust_dist(X, metric='euclidean'):
@@ -55,3 +56,17 @@ def mean_comp(X, metric='euclidean'):
         distfunc = getattr(dist, metric)
         res[i] = distfunc(u, v)
     return res
+
+
+def txt_comp_dist(contents, metric='euclidean'):
+    """Compute the distance between each text to its complement."""
+    vectorizer = CountVectorizer(stop_words='english')
+    vectorizer.fit(contents)
+    res = []
+    for i, cont in enumerate(contents):
+        comp = ' '.join(contents[:i] + contents[i+1:])
+        u = vectorizer.transform([cont]).toarray()
+        v = vectorizer.transform([comp]).toarray()
+        distfunc = getattr(dist, metric)
+        res.append(distfunc(u, v))
+    return np.array(res)
