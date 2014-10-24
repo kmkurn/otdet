@@ -8,65 +8,66 @@ from sklearn.cross_validation import LeaveOneOut
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-def clust_dist(X, metric='euclidean'):
-    """Compute the average distance of a vector to others.
+class lazyproperty:
+    def __init__(self, func):
+        self.func = func
 
-    ClustDist of a vector x to a set of vectors V is defined as the average
-    distance of x to all vectors v in V.
-
-    Parameters
-    ----------
-    X : matrix
-        An m-by-n matrix which represents m n-dimensional vectors.
-
-    metric : string, optional (default = 'euclidean')
-        Distance metric to be used. See scipy.spatial.distance for a list
-        of available values.
-
-    Returns
-    -------
-    dists : array
-        An array of average distances where dists[i] represents the average
-        distance between vector X[i] and other vectors in X.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from method import clust_dist
-    >>> X = np.array([[1, 2], [-1, 0], [5, 3]])
-    >>> clust_dist(X, metric='euclidean')
-    array([ 2.31717758,  3.17887702,  3.61043652])
-
-    References
-    ----------
-    .. [1] Guthrie, D. (2008).
-       Unsupervised Detection of Anomalous Text.
-       University of Sheffield.
-       Retrieved from http://nlp.shef.ac.uk/talks/Guthrie_20081127.pdf
-    """
-    return np.mean(dist.squareform(dist.pdist(X, metric)), axis=0)
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self
+        else:
+            value = self.func(instance)
+            setattr(instance, self.func.__name__, value)
+            return value
 
 
-def mean_comp(X, metric='euclidean'):
-    """Compute the distance between each vector to its complement vector."""
-    m = X.shape[0]
-    res = np.zeros(m)
-    for i, (comp, vec) in enumerate(LeaveOneOut(m)):
-        v, u = np.mean(X[comp], axis=0), np.ravel(X[vec])
-        distfunc = getattr(dist, metric)
-        res[i] = distfunc(u, v)
-    return res
+class OffTopicDetector:
+    """Off-topic detection methods."""
 
+    def __init__(self, filenames):
+        self.filenames = filenames
 
-def txt_comp_dist(contents, metric='euclidean'):
-    """Compute the distance between each text to its complement."""
-    vectorizer = CountVectorizer(stop_words='english')
-    vectorizer.fit(contents)
-    res = []
-    for i, cont in enumerate(contents):
-        comp = ' '.join(contents[:i] + contents[i+1:])
-        u = vectorizer.transform([cont]).toarray()
-        v = vectorizer.transform([comp]).toarray()
-        distfunc = getattr(dist, metric)
-        res.append(distfunc(u, v))
-    return np.array(res)
+    @lazyproperty
+    def design_matrix(self):
+        """Returns feature vector of each document as matrix."""
+        vectorizer = CountVectorizer(input='filename', stop_words='english')
+        return vectorizer.fit_transform(self.filenames).toarray()
+
+    @lazyproperty
+    def contents(self):
+        """Returns the content of each document."""
+        res = []
+        for filename in self.filenames:
+            f = open(filename)
+            res.append(f.read())
+            f.close()
+        return res
+
+    def clust_dist(self, metric='euclidean'):
+        """Compute ClustDist score of each document."""
+        X = self.design_matrix
+        return np.mean(dist.squareform(dist.pdist(X, metric)), axis=0)
+
+    def mean_comp(self, metric='euclidean'):
+        """Compute MeanComp score of each document."""
+        X = self.design_matrix
+        m = X.shape[0]
+        res = np.zeros(m)
+        for i, (comp, vec) in enumerate(LeaveOneOut(m)):
+            v, u = np.mean(X[comp], axis=0), np.ravel(X[vec])
+            distfunc = getattr(dist, metric)
+            res[i] = distfunc(u, v)
+        return res
+
+    def txt_comp_dist(self, metric='euclidean'):
+        """Compute TxtCompDist score of each document."""
+        vectorizer = CountVectorizer(stop_words='english')
+        vectorizer.fit(self.contents)
+        res = []
+        for i, cont in enumerate(self.contents):
+            comp = ' '.join(self.contents[:i] + self.contents[i+1:])
+            u = vectorizer.transform([cont]).toarray()
+            v = vectorizer.transform([comp]).toarray()
+            distfunc = getattr(dist, metric)
+            res.append(distfunc(u, v))
+        return np.array(res)

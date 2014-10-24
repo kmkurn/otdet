@@ -5,10 +5,9 @@ if __name__ == '__main__':
     from glob import glob
     import os.path
 
-    from sklearn.feature_extraction.text import CountVectorizer
     from termcolor import cprint
 
-    import method
+    from method import OffTopicDetector
     import util
 
     parser = argparse.ArgumentParser(description='Run experiment '
@@ -45,16 +44,11 @@ if __name__ == '__main__':
     truth = [False]*len(normfiles) + [True]*len(ootfiles)
 
     # Apply OOT post detection methods
+    detector = OffTopicDetector(files)
     for meth in args.method:
         print('\nApplying', meth, 'method...', end=' ')
-        if meth == 'txt_comp_dist':
-            pass
-        else:
-            vectorizer = CountVectorizer(input='filename',
-                                         stop_words='english')
-            X = vectorizer.fit_transform(files).toarray()
-            methodfunc = getattr(method, meth)
-            res = methodfunc(X)
+        methodfunc = getattr(detector, meth)
+        res = methodfunc()
         print('OK')
 
         # Construct ranked list of OOT posts (1: most off-topic)
