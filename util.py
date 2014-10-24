@@ -37,27 +37,29 @@ class lazyproperty:
 class Evaluator:
     """Evaluate performance of OOT detector."""
 
-    def __init__(self, N=1, M=None, n=None):
-        self.N = N      # of posts taken (top N list)
-        self.M = M      # of all posts
-        self.n = n      # of OOT posts
-        self.freq = defaultdict(int)
-        self.result_list = []
+    def __init__(self, N=1):
+        self.N = N           # of posts taken (top N list)
+        self._M = None       # of all posts
+        self._n = None       # of OOT posts
+        self._numexpr = 0    # of experiments
+        self._freq = defaultdict(int)
+        self._result_list = []
 
     def add_result(self, result):
         """Add an experiment result to be evaluated."""
-        if self.M is None:
-            self.M = self.n = 0
+        self._numexpr += 1
+        if self._M is None:
+            self._M = self._n = 0
             k = 0
-            for i, (oot, distance) in enumerate(result):
-                self.M += 1
+            for i, (_, oot) in enumerate(result):
+                self._M += 1
                 if oot:
-                    self.n += 1     # OOT post found
+                    self._n += 1     # OOT post found
                     k += 1 if i < self.N else 0
             # Count the number of OOT posts in top k
-            self.freq[k] += 1
+            self._freq[k] += 1
         else:
-            self.result_list.append(result)
+            self._result_list.append(result)
 
     @lazyproperty
     def baseline(self):
@@ -69,22 +71,24 @@ class Evaluator:
         Vector length is n+1, with k-th element represents the probability of
         getting k OOT posts in the top N list.
         """
-        if self.M is None:
-            raise ValueError('Cannot determine total number of posts.')
-        rv = hypergeom(self.M, self.n, self.N)
-        k = np.arange(0, self.n+1)
+        if self._numexpr == 0:
+            raise Exception('You should do at least one experiment.')
+        rv = hypergeom(self._M, self._n, self.N)
+        k = np.arange(0, self._n+1)
         return rv.pmf(k)
 
-    def evaluate(self):
-        """Return the evalution result in a performance vector."""
-        numexpr = 0     # of experiments
-        for result in self.result_list:
-            numexpr += 1
-            k = sum(oot for oot, _ in islice(result, self.N))
-            self.freq[k] += 1
+    @lazyproperty
+    def get_performance(self):
+        """Return the evaluation result in a performance vector."""
+        if self._numexpr == 0:
+            raise Exception('You should do at least one experiment.')
 
-        res = np.zeros(self.n+1)
-        for k in range(self.n+1):
-            res[k] = self.freq[k] / numexpr
+        for result in self._result_list:
+            k = sum(oot for _, oot in islice(result, self.N))
+            self._freq[k] += 1
+
+        res = np.zeros(self._n+1)
+        for k in range(self._n+1):
+            res[k] = self._freq[k] / self._numexpr
 
         return res
