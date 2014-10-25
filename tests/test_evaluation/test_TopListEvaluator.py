@@ -1,4 +1,6 @@
 from nose.tools import assert_equal, assert_greater
+from numpy.testing import assert_almost_equal
+import numpy as np
 
 from otdet.evaluation import TopListEvaluator
 
@@ -38,3 +40,32 @@ class TestAddResult:
         assert_equal(evaluator._numexpr, 2)
         assert_greater(len(evaluator._result_list), 0)
         assert_equal(evaluator._result_list[0], self.sample_result)
+
+
+class TestBaseline:
+    def setUp(self):
+        self.sample_result = [(5.0, True), (4.0, False), (3.0, True),
+                              (2.0, False), (1.0, False)]
+        self.M = len(self.sample_result)
+        self.n = sum(elm[1] for elm in self.sample_result)
+
+    def test_normal_case(self):
+        N = 3
+        evaluator = TopListEvaluator(N)
+        evaluator.add_result(self.sample_result)
+        expected = np.array([0.1, 0.6, 0.3])
+        assert_almost_equal(evaluator.baseline, expected)
+
+    def test_top_few_list(self):
+        N = 1
+        evaluator = TopListEvaluator(N)
+        evaluator.add_result(self.sample_result)
+        expected = np.array([0.6, 0.4, 0.0])
+        assert_almost_equal(evaluator.baseline, expected)
+
+    def test_top_many_list(self):
+        N = 4
+        evaluator = TopListEvaluator(N)
+        evaluator.add_result(self.sample_result)
+        expected = np.array([0.0, 0.4, 0.6])
+        assert_almost_equal(evaluator.baseline, expected)
