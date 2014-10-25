@@ -7,9 +7,9 @@ if __name__ == '__main__':
 
     from termcolor import cprint
 
-    from method import OffTopicDetector
-    from util import Evaluator
-    import util
+    from otdet.detector import OffTopicDetector
+    from otdet.evaluation import TopListEvaluator
+    from otdet.util import pick
 
     parser = argparse.ArgumentParser(description='Run experiment '
                                      'with given settings')
@@ -37,19 +37,19 @@ if __name__ == '__main__':
 
     for meth in args.method:
         print('### Applying', meth, 'method ###')
-        evaluator = Evaluator(args.N)
+        evaluator = TopListEvaluator(args.N)
         for ii in range(args.niter):
             # Obtain normal posts
-            normfiles = util.pick(glob(os.path.join(args.normal_thread, '*')),
-                                  k=args.num_norm, randomized=False)
+            normfiles = pick(glob(os.path.join(args.normal_thread, '*')),
+                             k=args.num_norm, randomized=False)
             # Print obtained normal posts in verbose mode
             if args.verbose:
                 print('Obtaining', len(normfiles), 'normal posts')
                 for file in normfiles:
                     cprint(file, 'green')
             # Obtain OOT posts
-            ootfiles = util.pick(glob(os.path.join(args.oot_thread, '*')),
-                                 k=args.num_oot)
+            ootfiles = pick(glob(os.path.join(args.oot_thread, '*')),
+                            k=args.num_oot)
             # Print obtained OOT posts in verbose mode
             if args.verbose:
                 print('Obtaining', len(ootfiles), 'OOT posts:')

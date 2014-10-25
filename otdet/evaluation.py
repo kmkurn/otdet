@@ -1,41 +1,14 @@
-#!/usr/bin/env python
-
 from collections import defaultdict
 from itertools import islice
-import random
-import re
 
 import numpy as np
 from scipy.stats import hypergeom
 
-
-def pick(filenames, k=None, randomized=True):
-    """Pick some thread files from a thread directory."""
-    if k is not None and k < 0:
-        raise ValueError('k should be non-negative')
-    if randomized:
-        random.shuffle(filenames)
-    else:
-        pattern = '([0-9]+)\.txt'
-        filenames.sort(key=lambda f: int(re.search(pattern, f).group(1)))
-    return filenames if k is None else filenames[:k]
+from otdet.util import lazyproperty
 
 
-class lazyproperty:
-    def __init__(self, func):
-        self.func = func
-
-    def __get__(self, instance, cls):
-        if instance is None:
-            return self
-        else:
-            value = self.func(instance)
-            setattr(instance, self.func.__name__, value)
-            return value
-
-
-class Evaluator:
-    """Evaluate performance of OOT detector."""
+class TopListEvaluator:
+    """Evaluate performance of OOT detector based on ranked result list."""
 
     def __init__(self, N=1):
         self.N = N           # of posts taken (top N list)
