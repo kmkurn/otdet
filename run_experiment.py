@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     from termcolor import cprint
 
-    from otdet.detector import OffTopicDetector
+    from otdet.detector import OOTDetector
     from otdet.evaluation import TopListEvaluator
     from otdet.util import pick
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
             # Apply OOT post detection methods
             print('Iteration #{:02}:'.format(ii+1), end=' ')
-            detector = OffTopicDetector(files)
+            detector = OOTDetector(files)
             methodfunc = getattr(detector, meth)
             distances = methodfunc()
             print('OK')

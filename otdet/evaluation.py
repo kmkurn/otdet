@@ -1,3 +1,7 @@
+"""
+Out-of-topic post detection evaluation methods.
+"""
+
 from collections import defaultdict
 from itertools import islice
 

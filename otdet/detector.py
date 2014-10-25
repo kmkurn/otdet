@@ -1,5 +1,5 @@
 """
-Anomalous text detection methods.
+Out-of-topic post detection methods.
 """
 
 import numpy as np
@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from otdet.util import lazyproperty
 
 
-class OffTopicDetector:
+class OOTDetector:
     """Off-topic detection methods."""
 
     def __init__(self, filenames):
