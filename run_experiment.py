@@ -33,10 +33,12 @@ if __name__ == '__main__':
                         help='Number of iteration for each method')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Be verbose')
+    parser.add_argument('-c', '--colorized', action='store_true',
+                        help='Colorize output')
     args = parser.parse_args()
 
     for meth in args.method:
-        print('### Applying', meth, 'method ###')
+        print('##### Applying', meth, 'method #####')
         evaluator = TopListEvaluator(args.top)
         for ii in range(args.niter):
             # Obtain normal posts
@@ -44,17 +46,23 @@ if __name__ == '__main__':
                              k=args.num_norm, randomized=False)
             # Print obtained normal posts in verbose mode
             if args.verbose:
-                print('Obtaining', len(normfiles), 'normal posts')
+                print('>> Obtaining', len(normfiles), 'normal posts')
                 for file in normfiles:
-                    cprint(file, 'green')
+                    if args.colorized:
+                        cprint(file, 'green')
+                    else:
+                        print(file)
             # Obtain OOT posts
             ootfiles = pick(glob(os.path.join(args.ootdir, '*.txt')),
                             k=args.num_oot)
             # Print obtained OOT posts in verbose mode
             if args.verbose:
-                print('Obtaining', len(ootfiles), 'OOT posts:')
+                print('>> Obtaining', len(ootfiles), 'OOT posts:')
                 for file in ootfiles:
-                    cprint(file, 'red')
+                    if args.colorized:
+                        cprint(file, 'red')
+                    else:
+                        print(file)
             # Combine them both
             files = normfiles + ootfiles
             truth = [False]*len(normfiles) + [True]*len(ootfiles)
@@ -74,8 +82,14 @@ if __name__ == '__main__':
             # Print result in verbose mode
             if args.verbose:
                 for i, (file, distance, oot) in enumerate(ranked):
-                    txt = '#{:02} {} -> {}'.format(i+1, file, distance)
-                    cprint(txt, 'red' if oot else 'green')
+                    if args.colorized:
+                        txt = '#{:02} {} -> {}'.format(i+1, file, distance)
+                        cprint(txt, 'red' if oot else 'green')
+                    else:
+                        sym = 'o' if oot else ' '
+                        txt = '#{:02} {} {} -> {}'.format(i+1, sym, file,
+                                                          distance)
+                        print(txt)
 
             # Store ranked list for evaluation
             ranked = [(distance, oot) for _, distance, oot in ranked]
