@@ -12,7 +12,7 @@ class TestAddResult:
         self.M = len(self.sample_result)
         self.n = sum(elm[1] for elm in self.sample_result)
 
-    def test_normal_result(self):
+    def test_normal_case(self):
         N = 2
         k = sum(elm[1] for elm in self.sample_result[:N])
         evaluator = TopListEvaluator(N)
@@ -46,27 +46,25 @@ class TestBaseline:
     def setUp(self):
         self.sample_result = [(5.0, True), (4.0, False), (3.0, True),
                               (2.0, False), (1.0, False)]
+        self.evaluator = TopListEvaluator()
 
     def test_normal_case(self):
-        N = 3
-        evaluator = TopListEvaluator(N)
-        evaluator.add_result(self.sample_result)
+        self.evaluator.N = 3
+        self.evaluator.add_result(self.sample_result)
         expected = np.array([0.1, 0.6, 0.3])
-        assert_almost_equal(evaluator.baseline, expected)
+        assert_almost_equal(self.evaluator.baseline, expected)
 
     def test_top_few_list(self):
-        N = 1
-        evaluator = TopListEvaluator(N)
-        evaluator.add_result(self.sample_result)
+        self.evaluator.N = 1
+        self.evaluator.add_result(self.sample_result)
         expected = np.array([0.6, 0.4, 0.0])
-        assert_almost_equal(evaluator.baseline, expected)
+        assert_almost_equal(self.evaluator.baseline, expected)
 
     def test_top_many_list(self):
-        N = 4
-        evaluator = TopListEvaluator(N)
-        evaluator.add_result(self.sample_result)
+        self.evaluator.N = 4
+        self.evaluator.add_result(self.sample_result)
         expected = np.array([0.0, 0.4, 0.6])
-        assert_almost_equal(evaluator.baseline, expected)
+        assert_almost_equal(self.evaluator.baseline, expected)
 
 
 class TestGetPerformance:
