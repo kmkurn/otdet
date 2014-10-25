@@ -13,21 +13,21 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Run experiment '
                                      'with given settings')
-    parser.add_argument('normal_thread', type=str,
+    parser.add_argument('normdir', type=str,
                         help='Normal thread directory')
-    parser.add_argument('oot_thread', type=str,
+    parser.add_argument('ootdir', type=str,
                         help='Thread directory from which '
                         'OOT post will be taken')
-    parser.add_argument('--num-norm', type=int, default=None,
+    parser.add_argument('-m', '--num-norm', type=int, default=None,
                         help='Number of posts taken from '
                         'normal thread directory')
-    parser.add_argument('--num-oot', type=int, default=None,
+    parser.add_argument('-n', '--num-oot', type=int, default=None,
                         help='Number of posts taken from '
                         'another thread directory to be OOT posts')
-    parser.add_argument('--method', type=str, nargs='+',
+    parser.add_argument('-a', '--method', type=str, nargs='+',
                         choices=['clust_dist', 'mean_comp', 'txt_comp_dist'],
                         help='OOT post detection method to use')
-    parser.add_argument('-N', type=int, default=1,
+    parser.add_argument('-t', '--top', type=int, default=1,
                         help='Number of posts in top N list')
     parser.add_argument('--niter', type=int, default=1,
                         help='Number of iteration for each method')
@@ -37,10 +37,10 @@ if __name__ == '__main__':
 
     for meth in args.method:
         print('### Applying', meth, 'method ###')
-        evaluator = TopListEvaluator(args.N)
+        evaluator = TopListEvaluator(args.top)
         for ii in range(args.niter):
             # Obtain normal posts
-            normfiles = pick(glob(os.path.join(args.normal_thread, '*')),
+            normfiles = pick(glob(os.path.join(args.normdir, '*.txt')),
                              k=args.num_norm, randomized=False)
             # Print obtained normal posts in verbose mode
             if args.verbose:
@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 for file in normfiles:
                     cprint(file, 'green')
             # Obtain OOT posts
-            ootfiles = pick(glob(os.path.join(args.oot_thread, '*')),
+            ootfiles = pick(glob(os.path.join(args.ootdir, '*.txt')),
                             k=args.num_oot)
             # Print obtained OOT posts in verbose mode
             if args.verbose:
