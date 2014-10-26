@@ -46,14 +46,14 @@ if __name__ == '__main__':
 
     # Progress-related variables
     total_ops = len(expr_settings) * args.niter
-    step, step_size, progress_count = 1, total_ops / 100, 0
+    progress, chunk, step = 1, total_ops / 100, 0
 
-    report_dict = defaultdict(dict)
+    report = defaultdict(dict)
     for ii, setting in enumerate(expr_settings):
         num_norm, num_oot, method, top = setting
         # Begin experiment
         evaluator = TopListEvaluator(top)
-        report_dict[setting]['iteration'] = []
+        report[setting]['iteration'] = []
         for jj in range(args.niter):
             # Obtain normal posts
             normfiles = pick(glob(os.path.join(args.normdir, '*.txt')),
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
             # Put all to report
             tup = (normfiles, ootfiles, ranked)
-            report_dict[setting]['iteration'].append(tup)
+            report[setting]['iteration'].append(tup)
 
             # Store ranked list for evaluation
             ranked = [(distance, oot) for _, distance, oot in ranked]
@@ -85,13 +85,14 @@ if __name__ == '__main__':
 
             # Print progress to stderr
             print('.', end='', file=sys.stderr, flush=True)
-            progress_count += 1
-            if progress_count >= step * step_size:
-                print('{}%'.format(step), end='', file=sys.stderr, flush=True)
-                step += 1
+            step += 1
+            if step >= progress * chunk:
+                print('{}%'.format(progress), end='', file=sys.stderr,
+                      flush=True)
+                progress += 1
 
-        report_dict[setting]['baseline'] = evaluator.baseline
-        report_dict[setting]['performance'] = evaluator.get_performance
+        report[setting]['baseline'] = evaluator.baseline
+        report[setting]['performance'] = evaluator.get_performance
 
     print(' Done', file=sys.stderr, flush=True)
 
@@ -108,8 +109,8 @@ if __name__ == '__main__':
     print(len(expr_settings), 'experiment(s)')
     print()
 
-    for ii, sett in enumerate(report_dict):
-        num_norm, num_oot, method, top = sett
+    for ii, setting in enumerate(report):
+        num_norm, num_oot, method, top = setting
 
         # Preprocess num_norm
         if num_norm < 0:
@@ -122,7 +123,7 @@ if __name__ == '__main__':
 
         # Print obtained normal posts in very verbose mode
         if args.verbose == 2:
-            for normfiles, ootfiles, ranked in report_dict[sett]['iteration']:
+            for normfiles, ootfiles, ranked in report[setting]['iteration']:
                 print('    >> Obtaining', len(normfiles), 'normal posts')
                 for file in normfiles:
                     txt = '    {}'.format(file)
@@ -151,8 +152,8 @@ if __name__ == '__main__':
                         print(txt)
 
         baseline = ['{:.3f}'.format(p)
-                    for p in report_dict[sett]['baseline']]
+                    for p in report[setting]['baseline']]
         performance = ['{:.3f}'.format(p)
-                       for p in report_dict[sett]['performance']]
+                       for p in report[setting]['performance']]
         print('  Baseline:', '  '.join(baseline))
         print('  Performance:', '  '.join(performance))
