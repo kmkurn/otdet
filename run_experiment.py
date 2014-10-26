@@ -30,6 +30,10 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--method', type=str, nargs='+',
                         choices=['clust_dist', 'mean_comp', 'txt_comp_dist'],
                         help='OOT post detection method to use')
+    parser.add_argument('-d', '--metric', type=str, nargs='+',
+                        choices=['euclidean', 'cityblock', 'cosine',
+                                 'correlation'],
+                        help='Distance metric to use')
     parser.add_argument('-t', '--top', type=int, nargs='+',
                         help='Number of posts in top N list')
     parser.add_argument('--niter', type=int, default=1,
@@ -42,7 +46,7 @@ if __name__ == '__main__':
 
     # Experiment settings
     expr_settings = list(it.product(args.num_norm, args.num_oot, args.method,
-                                    args.top))
+                                    args.metric, args.top))
 
     # Progress-related variables
     total_ops = len(expr_settings) * args.niter
@@ -50,7 +54,7 @@ if __name__ == '__main__':
 
     report = defaultdict(dict)
     for ii, setting in enumerate(expr_settings):
-        num_norm, num_oot, method, top = setting
+        num_norm, num_oot, method, metric, top = setting
         # Begin experiment
         evaluator = TopListEvaluator(top)
         report[setting]['iteration'] = []
@@ -68,7 +72,7 @@ if __name__ == '__main__':
             # Apply OOT post detection methods
             detector = OOTDetector(files)
             methodfunc = getattr(detector, method)
-            distances = methodfunc()
+            distances = methodfunc(metric=metric)
 
             # Construct ranked list of OOT posts (1: most off-topic)
             # In case of tie, prioritize normal post (worst case)
@@ -103,14 +107,15 @@ if __name__ == '__main__':
         print('Number of normal posts           :', args.num_norm)
         print('Number of OOT posts              :', args.num_oot)
         print('OOT detection methods            :', ' '.join(args.method))
+        print('Distance metrics                 :', ' '.join(args.metric))
         print('Number of posts in top list      :', args.top)
         print('Number of iterations             :', args.niter)
 
     print(len(expr_settings), 'experiment(s)')
     print()
 
-    for ii, setting in enumerate(report):
-        num_norm, num_oot, method, top = setting
+    for ii, setting in enumerate(sorted(report)):
+        num_norm, *rest = setting
 
         # Preprocess num_norm
         if num_norm < 0:
@@ -118,8 +123,8 @@ if __name__ == '__main__':
 
         # Print experiment setting info
         print('##### Experiment {} #####'.format(ii+1))
-        txt = '  M = {}, n = {}, N = {}, method = {}'
-        print(txt.format(num_norm+num_oot, num_oot, top, method))
+        txt = '  m = {}, n = {}, method = {}, metric = {}, t = {}'
+        print(txt.format(num_norm, *rest))
 
         # Print obtained normal posts in very verbose mode
         if args.verbose == 2:
