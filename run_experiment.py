@@ -50,7 +50,8 @@ if __name__ == '__main__':
 
     # Progress-related variables
     total_ops = len(expr_settings) * args.niter
-    progress, chunk, step = 1, total_ops / 100, 0
+    checkpoint, step = 0.1, 0
+    # progress, chunk, step = 1, total_ops / 100, 0
 
     report = defaultdict(dict)
     for ii, setting in enumerate(expr_settings):
@@ -89,11 +90,14 @@ if __name__ == '__main__':
 
             # Print progress to stderr
             print('.', end='', file=sys.stderr, flush=True)
-            step += 1
-            if step >= progress * chunk:
-                print('{}%'.format(progress), end='', file=sys.stderr,
-                      flush=True)
-                progress += 1
+            if total_ops > 100:
+                step += 1
+                progress = step / total_ops
+                if progress >= checkpoint:
+                    print('{:.0f}%'.format(progress*100), end='',
+                          file=sys.stderr, flush=True)
+                    while progress >= checkpoint:
+                        checkpoint += 0.1
 
         report[setting]['baseline'] = evaluator.baseline
         report[setting]['performance'] = evaluator.get_performance
