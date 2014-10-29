@@ -107,7 +107,7 @@ if __name__ == '__main__':
     # Print experiment report
     print('Normal thread dir                :', args.normdir)
     print('OOT thread dir                   :', args.ootdir)
-    if args.verbose == 1:
+    if args.verbose >= 1:
         print('Number of normal posts           :', args.num_norm)
         print('Number of OOT posts              :', args.num_oot)
         print('OOT detection methods            :', ' '.join(args.method))
@@ -131,7 +131,7 @@ if __name__ == '__main__':
         print(txt.format(num_norm, *rest))
 
         # Print obtained normal posts in very verbose mode
-        if args.verbose == 2:
+        if args.verbose >= 2:
             for normfiles, ootfiles, ranked in report[setting]['iteration']:
                 print('    >> Obtaining', len(normfiles), 'normal posts')
                 for file in normfiles:
