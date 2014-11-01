@@ -39,6 +39,7 @@ if __name__ == '__main__':
     import argparse
     from collections import defaultdict
     import itertools as it
+    from multiprocessing import Pool
     import sys
 
     from termcolor import cprint
@@ -73,6 +74,8 @@ if __name__ == '__main__':
                         help='Be verbose')
     parser.add_argument('-c', '--colorized', action='store_true',
                         help='Colorize output')
+    parser.add_argument('-j', '--jobs', type=int, default=1,
+                        help='Number of work processes')
     args = parser.parse_args()
 
     # Experiment settings
@@ -81,10 +84,12 @@ if __name__ == '__main__':
                                     args.top))
 
     # Do experiments
+    with Pool(processes=args.jobs) as pool:
+        results = pool.map_async(experiment, expr_settings).get()
+
     report = defaultdict(dict)
-    for setting in expr_settings:
+    for setting, result in zip(expr_settings, results):
         *_, top = setting
-        result = experiment(setting)
         # Evaluate ranking
         evaluator = TopListEvaluator(top)
         for _, _, ranked in result:
