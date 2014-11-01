@@ -16,25 +16,25 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Run experiment '
                                      'with given settings')
-    parser.add_argument('normdir', type=str,
+    parser.add_argument('-nd', '--normdir', type=str, nargs='+', required=True,
                         help='Normal thread directory')
-    parser.add_argument('ootdir', type=str,
+    parser.add_argument('-od', '--ootdir', type=str, nargs='+', required=True,
                         help='Thread directory from which '
                         'OOT post will be taken')
-    parser.add_argument('-m', '--num-norm', type=int, nargs='+',
+    parser.add_argument('-m', '--num-norm', type=int, nargs='+', required=True,
                         help='Number of posts taken from '
                         'normal thread directory')
-    parser.add_argument('-n', '--num-oot', type=int, nargs='+',
+    parser.add_argument('-n', '--num-oot', type=int, nargs='+', required=True,
                         help='Number of posts taken from '
                         'another thread directory to be OOT posts')
-    parser.add_argument('-a', '--method', type=str, nargs='+',
+    parser.add_argument('-a', '--method', type=str, nargs='+', required=True,
                         choices=['clust_dist', 'mean_comp', 'txt_comp_dist'],
                         help='OOT post detection method to use')
-    parser.add_argument('-d', '--metric', type=str, nargs='+',
+    parser.add_argument('-d', '--metric', type=str, nargs='+', required=True,
                         choices=['euclidean', 'cityblock', 'cosine',
                                  'correlation'],
                         help='Distance metric to use')
-    parser.add_argument('-t', '--top', type=int, nargs='+',
+    parser.add_argument('-t', '--top', type=int, nargs='+', required=True,
                         help='Number of posts in top N list')
     parser.add_argument('--niter', type=int, default=1,
                         help='Number of iteration for each method')
@@ -45,8 +45,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Experiment settings
-    expr_settings = list(it.product(args.num_norm, args.num_oot, args.method,
-                                    args.metric, args.top))
+    expr_settings = list(it.product(args.normdir, args.ootdir, args.num_norm,
+                                    args.num_oot, args.method, args.metric,
+                                    args.top))
 
     # Progress-related variables
     total_ops = len(expr_settings) * args.niter
@@ -55,17 +56,16 @@ if __name__ == '__main__':
 
     report = defaultdict(dict)
     for ii, setting in enumerate(expr_settings):
-        num_norm, num_oot, method, metric, top = setting
+        normdir, ootdir, num_norm, num_oot, method, metric, top = setting
         # Begin experiment
         evaluator = TopListEvaluator(top)
         report[setting]['iteration'] = []
         for jj in range(args.niter):
             # Obtain normal posts
-            normfiles = pick(glob(os.path.join(args.normdir, '*.txt')),
-                             k=num_norm, randomized=False)
+            normfiles = pick(glob(os.path.join(normdir, '*.txt')), k=num_norm,
+                             randomized=False)
             # Obtain OOT posts
-            ootfiles = pick(glob(os.path.join(args.ootdir, '*.txt')),
-                            k=num_oot)
+            ootfiles = pick(glob(os.path.join(ootdir, '*.txt')), k=num_oot)
             # Combine them both
             files = normfiles + ootfiles
             truth = [False]*len(normfiles) + [True]*len(ootfiles)
@@ -105,8 +105,12 @@ if __name__ == '__main__':
     print(' Done', file=sys.stderr, flush=True)
 
     # Print experiment report
-    print('Normal thread dir                :', args.normdir)
-    print('OOT thread dir                   :', args.ootdir)
+    print('Normal thread dir                :')
+    for normdir in args.normdir:
+        print('  {}'.format(normdir))
+    print('OOT thread dir                   :')
+    for ootdir in args.ootdir:
+        print('  {}'.format(ootdir))
     if args.verbose >= 1:
         print('Number of normal posts           :', args.num_norm)
         print('Number of OOT posts              :', args.num_oot)
@@ -119,7 +123,7 @@ if __name__ == '__main__':
     print()
 
     for ii, setting in enumerate(sorted(report)):
-        num_norm, *rest = setting
+        normdir, ootdir, num_norm, *rest = setting
 
         # Preprocess num_norm
         if num_norm < 0:
@@ -127,6 +131,8 @@ if __name__ == '__main__':
 
         # Print experiment setting info
         print('##### Experiment {} #####'.format(ii+1))
+        txt = '  normdir = {}\n ootdir = {}'
+        print(txt.format(normdir, ootdir))
         txt = '  m = {}, n = {}, method = {}, metric = {}, t = {}'
         print(txt.format(num_norm, *rest))
 
