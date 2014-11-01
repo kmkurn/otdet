@@ -166,9 +166,9 @@ if __name__ == '__main__':
                                                               distance)
                         print(txt)
 
-        baseline = ['{:.3f}'.format(p)
+        baseline = ['{:.6f}'.format(p)
                     for p in report[setting]['baseline']]
-        performance = ['{:.3f}'.format(p)
+        performance = ['{:.6f}'.format(p)
                        for p in report[setting]['performance']]
         print('  Baseline:', '  '.join(baseline))
         print('  Performance:', '  '.join(performance))
