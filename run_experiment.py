@@ -1,18 +1,49 @@
 #!/usr/bin/env python
 
+from glob import glob
+import os.path
+
+from otdet.detector import OOTDetector
+from otdet.util import pick
+
+
+def experiment(setting):
+    normdir, ootdir, num_norm, num_oot, method, metric, top = setting
+    result = []
+    for jj in range(args.niter):
+        # Obtain normal posts
+        normfiles = pick(glob(os.path.join(normdir, '*.txt')), k=num_norm,
+                         randomized=False)
+        # Obtain OOT posts
+        ootfiles = pick(glob(os.path.join(ootdir, '*.txt')), k=num_oot)
+        # Combine them both
+        files = normfiles + ootfiles
+        truth = [False]*len(normfiles) + [True]*len(ootfiles)
+
+        # Apply OOT post detection methods
+        detector = OOTDetector(files)
+        methodfunc = getattr(detector, method)
+        distances = methodfunc(metric=metric)
+
+        # Construct ranked list of OOT posts (1: most off-topic)
+        # In case of tie, prioritize normal post (worst case)
+        s = sorted(zip(files, distances, truth), key=lambda x: x[2])
+        ranked = sorted(s, key=lambda x: x[1], reverse=True)
+
+        # Append to result
+        result.append((normfiles, ootfiles, ranked))
+    return result
+
+
 if __name__ == '__main__':
     import argparse
     from collections import defaultdict
-    from glob import glob
     import itertools as it
-    import os.path
     import sys
 
     from termcolor import cprint
 
-    from otdet.detector import OOTDetector
     from otdet.evaluation import TopListEvaluator
-    from otdet.util import pick
 
     parser = argparse.ArgumentParser(description='Run experiment '
                                      'with given settings')
@@ -49,60 +80,22 @@ if __name__ == '__main__':
                                     args.num_oot, args.method, args.metric,
                                     args.top))
 
-    # Progress-related variables
-    total_ops = len(expr_settings) * args.niter
-    checkpoint, step = 0.1, 0
-    # progress, chunk, step = 1, total_ops / 100, 0
-
+    # Do experiments
     report = defaultdict(dict)
-    for ii, setting in enumerate(expr_settings):
-        normdir, ootdir, num_norm, num_oot, method, metric, top = setting
-        # Begin experiment
+    for setting in expr_settings:
+        *_, top = setting
+        result = experiment(setting)
+        # Evaluate ranking
         evaluator = TopListEvaluator(top)
-        report[setting]['iteration'] = []
-        for jj in range(args.niter):
-            # Obtain normal posts
-            normfiles = pick(glob(os.path.join(normdir, '*.txt')), k=num_norm,
-                             randomized=False)
-            # Obtain OOT posts
-            ootfiles = pick(glob(os.path.join(ootdir, '*.txt')), k=num_oot)
-            # Combine them both
-            files = normfiles + ootfiles
-            truth = [False]*len(normfiles) + [True]*len(ootfiles)
-
-            # Apply OOT post detection methods
-            detector = OOTDetector(files)
-            methodfunc = getattr(detector, method)
-            distances = methodfunc(metric=metric)
-
-            # Construct ranked list of OOT posts (1: most off-topic)
-            # In case of tie, prioritize normal post (worst case)
-            s = sorted(zip(files, distances, truth), key=lambda x: x[2])
-            ranked = sorted(s, key=lambda x: x[1], reverse=True)
-
-            # Put all to report
-            tup = (normfiles, ootfiles, ranked)
-            report[setting]['iteration'].append(tup)
-
-            # Store ranked list for evaluation
-            ranked = [(distance, oot) for _, distance, oot in ranked]
-            evaluator.add_result(ranked)
-
-            # Print progress to stderr
-            print('.', end='', file=sys.stderr, flush=True)
-            if total_ops > 100:
-                step += 1
-                progress = step / total_ops
-                if progress >= checkpoint:
-                    print('{:.0f}%'.format(progress*100), end='',
-                          file=sys.stderr, flush=True)
-                    while progress >= checkpoint:
-                        checkpoint += 0.1
-
+        for _, _, ranked in result:
+            evaluator.add_result([(distance, oot)
+                                  for _, distance, oot in ranked])
+        # Store the report
+        report[setting]['iteration'] = result
         report[setting]['baseline'] = evaluator.baseline
         report[setting]['performance'] = evaluator.get_performance
 
-    print(' Done', file=sys.stderr, flush=True)
+    print('Done', file=sys.stderr, flush=True)
 
     # Print experiment report
     print('Normal thread dir                :')
@@ -127,12 +120,12 @@ if __name__ == '__main__':
 
         # Preprocess num_norm
         if num_norm < 0:
-            num_norm = len(glob(os.path.join(args.normdir, '*.txt')))
+            num_norm = len(glob(os.path.join(normdir, '*.txt')))
 
         # Print experiment setting info
         print('##### Experiment {} #####'.format(ii+1))
-        txt = '  normdir = {}\n ootdir = {}'
-        print(txt.format(normdir, ootdir))
+        print('  normdir =', normdir)
+        print('  ootdir =', ootdir)
         txt = '  m = {}, n = {}, method = {}, metric = {}, t = {}'
         print(txt.format(num_norm, *rest))
 
@@ -170,5 +163,5 @@ if __name__ == '__main__':
                     for p in report[setting]['baseline']]
         performance = ['{:.6f}'.format(p)
                        for p in report[setting]['performance']]
-        print('  Baseline:', '  '.join(baseline))
-        print('  Performance:', '  '.join(performance))
+        print('  BASELINE:', '  '.join(baseline))
+        print('  PERFORMANCE:', '  '.join(performance))
