@@ -16,7 +16,7 @@ def post_filter(tag):
     return isinstance(tag['class'], list) and 'messageText' in tag['class']
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Scrape Physicsforum forum')
+    parser = argparse.ArgumentParser(description='Scrape Physicsforums forum')
     parser.add_argument('id', type=str, help='Thread ID')
     parser.add_argument('-p', '--page', type=int, default=1,
                         help='Page number')
