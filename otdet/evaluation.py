@@ -27,10 +27,10 @@ class TopListEvaluator:
         if len(results) == 0:
             raise Exception('Results cannot be empty.')
 
-        sizelist = [(len(result), sum(oot for _, oot in result))
-                    for result in results]
-        if len(set(sizelist)) > 1 or sizelist[0][0] != self.M or \
-                sizelist[0][1] != self.n:
+        size_tuples = [(len(result), sum(is_oot for _, is_oot in result))
+                       for result in results]
+        if len(set(size_tuples)) > 1 or size_tuples[0][0] != self.M or \
+                size_tuples[0][1] != self.n:
             raise Exception('Number of posts mismatch.')
 
     @lazyproperty
@@ -51,13 +51,14 @@ class TopListEvaluator:
         """Return the evaluation result in a performance vector."""
         self._validate(results)
 
-        numexpr = len(results)
-        n = sum(oot for _, oot in results[0])
-        ntop = [sum(oot for _, oot in result[:self.N]) for result in results]
+        num_expr = len(results)
+        n = sum(is_oot for _, is_oot in results[0])
+        top_oot_nums = [sum(is_oot for _, is_oot in result[:self.N])
+                        for result in results]
 
         res = np.zeros(n+1)
-        count = Counter(ntop)
+        count = Counter(top_oot_nums)
         for k in range(n+1):
-            res[k] = count[k] / numexpr
+            res[k] = count[k] / num_expr
 
         return res
