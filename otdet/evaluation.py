@@ -5,7 +5,7 @@ Out-of-topic post detection evaluation methods.
 from collections import Counter
 
 import numpy as np
-from scipy.stats import hypergeom
+from scipy.stats import hypergeom, skew
 
 from otdet.util import lazyproperty
 
@@ -47,6 +47,12 @@ class TopListEvaluator:
         k = np.arange(0, self.n+1)
         return rv.pmf(k)
 
+    @lazyproperty
+    def baseline_skew(self):
+        """Return the skewness measure of baseline."""
+        rv = hypergeom(self.M, self.n, self.N)
+        return float(rv.stats(moments='s'))
+
     def get_performance(self, results):
         """Return the evaluation result in a performance vector."""
         self._validate(results)
@@ -62,3 +68,10 @@ class TopListEvaluator:
             res[k] = count[k] / num_expr
 
         return res
+
+    def get_performance_skew(self, results):
+        """Compute performance skewness unbiased estimate."""
+        self._validate(results)
+        top_oot_nums = [sum(is_oot for _, is_oot in result[:self.N])
+                        for result in results]
+        return skew(top_oot_nums, bias=False)

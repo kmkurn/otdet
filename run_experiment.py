@@ -42,7 +42,9 @@ def evaluate(setting, result):
     evaluator = TopListEvaluator(M=num_norm+num_oot, n=num_oot, N=num_top)
     trans_result = [[(distance, is_oot) for _, distance, is_oot in ranked]
                     for _, _, ranked in result]
-    return evaluator.baseline, evaluator.get_performance(trans_result)
+    return (evaluator.baseline, evaluator.baseline_skew,
+            evaluator.get_performance(trans_result),
+            evaluator.get_performance_skew(trans_result))
 
 
 if __name__ == '__main__':
@@ -100,10 +102,12 @@ if __name__ == '__main__':
     report = defaultdict(dict)
     for setting, result in zip(settings, results):
         # Store the report
-        baseline, performance = evaluate(setting, result)
+        base, base_skew, perf, perf_skew = evaluate(setting, result)
         report[setting]['iteration'] = result
-        report[setting]['baseline'] = baseline
-        report[setting]['performance'] = performance
+        report[setting]['baseline'] = base
+        report[setting]['base_skew'] = base_skew
+        report[setting]['performance'] = perf
+        report[setting]['perf_skew'] = perf_skew
 
     print('Done', file=sys.stderr, flush=True)
 
@@ -171,5 +175,7 @@ if __name__ == '__main__':
                     for p in report[setting]['baseline']]
         performance = ['{:.6f}'.format(p)
                        for p in report[setting]['performance']]
-        print('  BASELINE:', '  '.join(baseline))
-        print('  PERFORMANCE:', '  '.join(performance))
+        print('  BASELINE:', report[setting]['base_skew'])
+        print('   ', '  '.join(baseline))
+        print('  PERFORMANCE:', report[setting]['perf_skew'])
+        print('   ', '  '.join(performance))
