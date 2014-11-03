@@ -126,18 +126,16 @@ if __name__ == '__main__':
     print()
 
     for ii, setting in enumerate(sorted(report)):
-        norm_dir, oot_dir, num_norm, *rest = setting
-
-        # Preprocess num_norm
-        if num_norm < 0:
-            num_norm = len(glob(os.path.join(norm_dir, '*.txt')))
+        norm_dir, oot_dir, *rest = setting
 
         # Print experiment setting info
+        if ii > 0 and ii % len(args.num_top) == 0:
+            print()
         print('##### Experiment {} #####'.format(ii+1))
         print('  norm_dir =', norm_dir)
         print('  oot_dir =', oot_dir)
         txt = '  m = {}, n = {}, method = {}, metric = {}, t = {}'
-        print(txt.format(num_norm, *rest))
+        print(txt.format(*rest))
 
         # Print obtained normal posts in very verbose mode
         if args.verbose >= 2:
