@@ -8,14 +8,15 @@ from otdet.util import pick
 
 
 def experiment(setting):
-    normdir, ootdir, num_norm, num_oot, method, metric, top = setting
+    """Do experiment with the specified setting."""
+    norm_dir, oot_dir, num_norm, num_oot, method, metric, top = setting
     result = []
     for jj in range(args.niter):
         # Obtain normal posts
-        normfiles = pick(glob(os.path.join(normdir, '*.txt')), k=num_norm,
+        normfiles = pick(glob(os.path.join(norm_dir, '*.txt')), k=num_norm,
                          randomized=False)
         # Obtain OOT posts
-        ootfiles = pick(glob(os.path.join(ootdir, '*.txt')), k=num_oot)
+        ootfiles = pick(glob(os.path.join(oot_dir, '*.txt')), k=num_oot)
         # Combine them both
         files = normfiles + ootfiles
         truth = [False]*len(normfiles) + [True]*len(ootfiles)
@@ -35,6 +36,15 @@ def experiment(setting):
     return result
 
 
+def evaluate(setting, result):
+    """Evaluate an experiment result with the given setting."""
+    num_norm, num_oot, num_top = setting[2], setting[3], setting[6]
+    evaluator = TopListEvaluator(M=num_norm+num_oot, n=num_oot, N=num_top)
+    trans_result = [[(distance, is_oot) for _, distance, is_oot in ranked]
+                    for _, _, ranked in result]
+    return evaluator.baseline, evaluator.get_performance(trans_result)
+
+
 if __name__ == '__main__':
     import argparse
     from collections import defaultdict
@@ -48,9 +58,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Run experiment '
                                      'with given settings')
-    parser.add_argument('-nd', '--normdir', type=str, nargs='+', required=True,
-                        help='Normal thread directory')
-    parser.add_argument('-od', '--ootdir', type=str, nargs='+', required=True,
+    parser.add_argument('-nd', '--norm-dir', type=str, nargs='+',
+                        required=True, help='Normal thread directory')
+    parser.add_argument('-od', '--oot-dir', type=str, nargs='+', required=True,
                         help='Thread directory from which '
                         'OOT post will be taken')
     parser.add_argument('-m', '--num-norm', type=int, nargs='+', required=True,
@@ -66,7 +76,7 @@ if __name__ == '__main__':
                         choices=['euclidean', 'cityblock', 'cosine',
                                  'correlation'],
                         help='Distance metric to use')
-    parser.add_argument('-t', '--top', type=int, nargs='+', required=True,
+    parser.add_argument('-t', '--num-top', type=int, nargs='+', required=True,
                         help='Number of posts in top N list')
     parser.add_argument('--niter', type=int, default=1,
                         help='Number of iteration for each method')
@@ -79,58 +89,53 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Experiment settings
-    expr_settings = list(it.product(args.normdir, args.ootdir, args.num_norm,
-                                    args.num_oot, args.method, args.metric,
-                                    args.top))
+    settings = list(it.product(args.norm_dir, args.oot_dir, args.num_norm,
+                               args.num_oot, args.method, args.metric,
+                               args.num_top))
 
     # Do experiments
     with Pool(processes=args.jobs) as pool:
-        results = pool.map_async(experiment, expr_settings).get()
+        results = pool.map_async(experiment, settings).get()
 
     report = defaultdict(dict)
-    for setting, result in zip(expr_settings, results):
-        *_, top = setting
-        # Evaluate ranking
-        evaluator = TopListEvaluator(top)
-        for _, _, ranked in result:
-            evaluator.add_result([(distance, oot)
-                                  for _, distance, oot in ranked])
+    for setting, result in zip(settings, results):
         # Store the report
+        baseline, performance = evaluate(setting, result)
         report[setting]['iteration'] = result
-        report[setting]['baseline'] = evaluator.baseline
-        report[setting]['performance'] = evaluator.get_performance
+        report[setting]['baseline'] = baseline
+        report[setting]['performance'] = performance
 
     print('Done', file=sys.stderr, flush=True)
 
     # Print experiment report
     print('Normal thread dir                :')
-    for normdir in args.normdir:
-        print('  {}'.format(normdir))
+    for norm_dir in args.norm_dir:
+        print('  {}'.format(norm_dir))
     print('OOT thread dir                   :')
-    for ootdir in args.ootdir:
-        print('  {}'.format(ootdir))
+    for oot_dir in args.oot_dir:
+        print('  {}'.format(oot_dir))
     if args.verbose >= 1:
         print('Number of normal posts           :', args.num_norm)
         print('Number of OOT posts              :', args.num_oot)
         print('OOT detection methods            :', ' '.join(args.method))
         print('Distance metrics                 :', ' '.join(args.metric))
-        print('Number of posts in top list      :', args.top)
+        print('Number of posts in top list      :', args.num_top)
         print('Number of iterations             :', args.niter)
 
-    print(len(expr_settings), 'experiment(s)')
+    print(len(settings), 'experiment(s)')
     print()
 
     for ii, setting in enumerate(sorted(report)):
-        normdir, ootdir, num_norm, *rest = setting
+        norm_dir, oot_dir, num_norm, *rest = setting
 
         # Preprocess num_norm
         if num_norm < 0:
-            num_norm = len(glob(os.path.join(normdir, '*.txt')))
+            num_norm = len(glob(os.path.join(norm_dir, '*.txt')))
 
         # Print experiment setting info
         print('##### Experiment {} #####'.format(ii+1))
-        print('  normdir =', normdir)
-        print('  ootdir =', ootdir)
+        print('  norm_dir =', norm_dir)
+        print('  oot_dir =', oot_dir)
         txt = '  m = {}, n = {}, method = {}, metric = {}, t = {}'
         print(txt.format(num_norm, *rest))
 
