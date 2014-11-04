@@ -66,7 +66,6 @@ class TopListEvaluator:
         count = Counter(top_oot_nums)
         for k in range(n+1):
             res[k] = count[k] / num_expr
-
         return res
 
     def get_performance_skew(self, results):

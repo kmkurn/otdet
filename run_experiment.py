@@ -1,25 +1,33 @@
 #!/usr/bin/env python
 
+import argparse
+from collections import defaultdict
 from glob import glob
+import itertools as it
+from multiprocessing import Pool
 import os.path
+import sys
+
+import numpy as np
 
 from otdet.detector import OOTDetector
+from otdet.evaluation import TopListEvaluator
 from otdet.util import pick
 
 
 def experiment(setting):
     """Do experiment with the specified setting."""
-    norm_dir, oot_dir, num_norm, num_oot, method, metric, top = setting
+    norm_dir, oot_dir, num_norm, num_oot, method, metric, num_top = setting
     result = []
     for jj in range(args.niter):
         # Obtain normal posts
-        normfiles = pick(glob(os.path.join(norm_dir, '*.txt')), k=num_norm,
-                         randomized=False)
+        norm_files = pick(glob(os.path.join(norm_dir, '*.txt')), k=num_norm,
+                          randomized=False)
         # Obtain OOT posts
-        ootfiles = pick(glob(os.path.join(oot_dir, '*.txt')), k=num_oot)
+        oot_files = pick(glob(os.path.join(oot_dir, '*.txt')), k=num_oot)
         # Combine them both
-        files = normfiles + ootfiles
-        truth = [False]*len(normfiles) + [True]*len(ootfiles)
+        files = norm_files + oot_files
+        is_oot = [False]*len(norm_files) + [True]*len(oot_files)
 
         # Apply OOT post detection methods
         detector = OOTDetector(files)
@@ -28,38 +36,26 @@ def experiment(setting):
 
         # Construct ranked list of OOT posts (1: most off-topic)
         # In case of tie, prioritize normal post (worst case)
-        s = sorted(zip(files, distances, truth), key=lambda x: x[2])
-        ranked = sorted(s, key=lambda x: x[1], reverse=True)
+        s = sorted(zip(distances, is_oot), key=lambda x: x[1])
+        subresult = sorted(s, reverse=True)
 
         # Append to result
-        result.append((normfiles, ootfiles, ranked))
+        result.append(subresult)
     return result
 
 
-def evaluate(setting, result):
+def evaluate(result, setting):
     """Evaluate an experiment result with the given setting."""
     num_norm, num_oot, num_top = setting[2], setting[3], setting[6]
     evaluator = TopListEvaluator(M=num_norm+num_oot, n=num_oot, N=num_top)
-    trans_result = [[(distance, is_oot) for _, distance, is_oot in ranked]
-                    for _, _, ranked in result]
     return (evaluator.baseline, evaluator.baseline_skew,
-            evaluator.get_performance(trans_result),
-            evaluator.get_performance_skew(trans_result))
+            evaluator.get_performance(result),
+            evaluator.get_performance_skew(result))
 
 
 if __name__ == '__main__':
-    import argparse
-    from collections import defaultdict
-    import itertools as it
-    from multiprocessing import Pool
-    import sys
-
-    from termcolor import cprint
-
-    from otdet.evaluation import TopListEvaluator
-
-    parser = argparse.ArgumentParser(description='Run experiment '
-                                     'with given settings')
+    parser = argparse.ArgumentParser(description='Run experiment with given '
+                                     'settings')
     parser.add_argument('-nd', '--norm-dir', type=str, nargs='+',
                         required=True, help='Normal thread directory')
     parser.add_argument('-od', '--oot-dir', type=str, nargs='+', required=True,
@@ -82,10 +78,6 @@ if __name__ == '__main__':
                         help='Number of posts in top N list')
     parser.add_argument('--niter', type=int, default=1,
                         help='Number of iteration for each method')
-    parser.add_argument('-v', '--verbose', action='count',
-                        help='Be verbose')
-    parser.add_argument('-c', '--colorized', action='store_true',
-                        help='Colorize output')
     parser.add_argument('-j', '--jobs', type=int, default=1,
                         help='Number of work processes')
     args = parser.parse_args()
@@ -99,11 +91,10 @@ if __name__ == '__main__':
     with Pool(processes=args.jobs) as pool:
         results = pool.map_async(experiment, settings).get()
 
+    # Store the report
     report = defaultdict(dict)
     for setting, result in zip(settings, results):
-        # Store the report
-        base, base_skew, perf, perf_skew = evaluate(setting, result)
-        report[setting]['iteration'] = result
+        base, base_skew, perf, perf_skew = evaluate(result, setting)
         report[setting]['baseline'] = base
         report[setting]['base_skew'] = base_skew
         report[setting]['performance'] = perf
@@ -118,19 +109,19 @@ if __name__ == '__main__':
     print('OOT thread dir                   :')
     for oot_dir in args.oot_dir:
         print('  {}'.format(oot_dir))
-    if args.verbose >= 1:
-        print('Number of normal posts           :', args.num_norm)
-        print('Number of OOT posts              :', args.num_oot)
-        print('OOT detection methods            :', ' '.join(args.method))
-        print('Distance metrics                 :', ' '.join(args.metric))
-        print('Number of posts in top list      :', args.num_top)
-        print('Number of iterations             :', args.niter)
+    print('Number of normal posts           :', args.num_norm)
+    print('Number of OOT posts              :', args.num_oot)
+    print('OOT detection methods            :', ' '.join(args.method))
+    print('Distance metrics                 :', ' '.join(args.metric))
+    print('Number of posts in top list      :', args.num_top)
+    print('Number of iterations             :', args.niter)
 
     print(len(settings), 'experiment(s)')
     print()
 
     for ii, setting in enumerate(sorted(report)):
         norm_dir, oot_dir, *rest = setting
+        summary = report[setting]
 
         # Print experiment setting info
         if ii > 0 and ii % len(args.num_top) == 0:
@@ -138,44 +129,14 @@ if __name__ == '__main__':
         print('##### Experiment {} #####'.format(ii+1))
         print('  norm_dir =', norm_dir)
         print('  oot_dir =', oot_dir)
-        txt = '  m = {}, n = {}, method = {}, metric = {}, t = {}'
+        txt = '  num_norm = {}, num_oot = {}, method = {}, metric = {}, '
+        'num_top = {}'
         print(txt.format(*rest))
 
-        # Print obtained normal posts in very verbose mode
-        if args.verbose >= 2:
-            for normfiles, ootfiles, ranked in report[setting]['iteration']:
-                print('    >> Obtaining', len(normfiles), 'normal posts')
-                for file in normfiles:
-                    txt = '    {}'.format(file)
-                    if args.colorized:
-                        cprint(txt, 'green')
-                    else:
-                        print(txt)
-
-                print('    >> Obtaining', len(ootfiles), 'OOT posts:')
-                for file in ootfiles:
-                    txt = '    {}'.format(file)
-                    if args.colorized:
-                        cprint(txt, 'red')
-                    else:
-                        print(txt)
-
-                print('    >> Result')
-                for i, (file, distance, oot) in enumerate(ranked):
-                    if args.colorized:
-                        txt = '    #{:02} {} -> {}'.format(i+1, file, distance)
-                        cprint(txt, 'red' if oot else 'green')
-                    else:
-                        sym = 'o' if oot else ' '
-                        txt = '    #{:02} {} {} -> {}'.format(i+1, sym, file,
-                                                              distance)
-                        print(txt)
-
-        baseline = ['{:.6f}'.format(p)
-                    for p in report[setting]['baseline']]
-        performance = ['{:.6f}'.format(p)
-                       for p in report[setting]['performance']]
-        print('  BASELINE:', report[setting]['base_skew'])
-        print('   ', '  '.join(baseline))
-        print('  PERFORMANCE:', report[setting]['perf_skew'])
-        print('   ', '  '.join(performance))
+        # Print experiment result summary
+        np.set_printoptions(precision=3, suppress=True,
+                            formatter={'float': '{: 0.3f}'.format})
+        print('  BASELINE:')
+        print(' ', summary['baseline'], 'skew =', summary['base_skew'])
+        print('  PERFORMANCE:')
+        print(' ', summary['performance'], 'skew =', summary['base_skew'])
