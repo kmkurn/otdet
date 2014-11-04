@@ -129,14 +129,16 @@ if __name__ == '__main__':
         print('##### Experiment {} #####'.format(ii+1))
         print('  norm_dir =', norm_dir)
         print('  oot_dir =', oot_dir)
-        txt = '  num_norm = {}, num_oot = {}, method = {}, metric = {}, '
-        'num_top = {}'
+        txt = '  m = {}, n = {}, method = {}, metric = {}, t = {}'
         print(txt.format(*rest))
 
         # Print experiment result summary
         np.set_printoptions(precision=3, suppress=True,
                             formatter={'float': '{: 0.3f}'.format})
+        txt = '  {} skew = {:0.3f}'
         print('  BASELINE:')
-        print(' ', summary['baseline'], 'skew =', summary['base_skew'])
+        print(txt.format(summary['baseline'], summary['base_skew']))
+        # print(' ', summary['baseline'], 'skew =', summary['base_skew'])
         print('  PERFORMANCE:')
-        print(' ', summary['performance'], 'skew =', summary['base_skew'])
+        print(txt.format(summary['performance'], summary['perf_skew']))
+        # print(' ', summary['performance'], 'skew =', summary['perf_skew'])
