@@ -12,7 +12,7 @@ import numpy as np
 
 from otdet.detector import OOTDetector
 from otdet.evaluation import TopListEvaluator
-from otdet.util import pick
+from otdet.util import pick, expected
 
 
 def experiment(setting):
@@ -46,11 +46,10 @@ def experiment(setting):
 
 def evaluate(result, setting):
     """Evaluate an experiment result with the given setting."""
-    num_norm, num_oot, num_top = setting[2], setting[3], setting[6]
-    evaluator = TopListEvaluator(M=num_norm+num_oot, n=num_oot, N=num_top)
-    return (evaluator.baseline, evaluator.baseline_skew,
-            evaluator.get_performance(result),
-            evaluator.get_performance_skew(result))
+    *_, num_top = setting
+    evaluator = TopListEvaluator(result, N=num_top)
+    return (evaluator.baseline, evaluator.performance,
+            evaluator.min_sup, evaluator.max_sup)
 
 
 if __name__ == '__main__':
@@ -94,11 +93,11 @@ if __name__ == '__main__':
     # Store the report
     report = defaultdict(dict)
     for setting, result in zip(settings, results):
-        base, base_skew, perf, perf_skew = evaluate(result, setting)
-        report[setting]['baseline'] = base
-        report[setting]['base_skew'] = base_skew
-        report[setting]['performance'] = perf
-        report[setting]['perf_skew'] = perf_skew
+        baseline, performance, min_sup, max_sup = evaluate(result, setting)
+        report[setting]['baseline'] = baseline
+        report[setting]['performance'] = performance
+        report[setting]['min_sup'] = min_sup
+        report[setting]['max_sup'] = max_sup
 
     print('Done', file=sys.stderr, flush=True)
 
@@ -121,7 +120,10 @@ if __name__ == '__main__':
 
     for ii, setting in enumerate(sorted(report)):
         norm_dir, oot_dir, *rest = setting
-        summary = report[setting]
+        baseline = report[setting]['baseline']
+        performance = report[setting]['performance']
+        min_sup = report[setting]['min_sup']
+        max_sup = report[setting]['max_sup']
 
         # Print experiment setting info
         if ii > 0 and ii % len(args.num_top) == 0:
@@ -134,11 +136,11 @@ if __name__ == '__main__':
 
         # Print experiment result summary
         np.set_printoptions(precision=3, suppress=True,
-                            formatter={'float': '{: 0.3f}'.format})
-        txt = '  {} skew = {:0.3f}'
-        print('  BASELINE:')
-        print(txt.format(summary['baseline'], summary['base_skew']))
-        # print(' ', summary['baseline'], 'skew =', summary['base_skew'])
-        print('  PERFORMANCE:')
-        print(txt.format(summary['performance'], summary['perf_skew']))
-        # print(' ', summary['performance'], 'skew =', summary['perf_skew'])
+                            formatter={'float': '{:6.3f}'.format,
+                                       'int': '{:6d}'.format})
+        support = np.arange(min_sup, max_sup+1)
+        print('  SUPP\t\t:', support)
+        print('  BASE\t\t:', baseline)
+        print('  PERF\t\t:', performance)
+        print('  EXP BASE\t: {:.3f}'.format(expected(support, baseline)))
+        print('  EXP PERF\t: {:.3f}'.format(expected(support, performance)))
