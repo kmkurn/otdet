@@ -5,7 +5,7 @@ Out-of-topic post detection evaluation methods.
 from collections import Counter
 
 import numpy as np
-from scipy.stats import hypergeom, skew
+from scipy.stats import hypergeom
 
 from otdet.util import lazyproperty
 
@@ -13,64 +13,70 @@ from otdet.util import lazyproperty
 class TopListEvaluator:
     """Evaluate performance of OOT detector based on ranked result list."""
 
-    def __init__(self, M=1, n=1, N=1):
-        self.M = M          # of all posts
-        self.n = n          # of OOT posts
-        self.N = N          # of posts taken (top N list)
+    def __init__(self, result, N=1):
+        if N < 0:
+            raise Exception('Cannot pick negative number of posts in top list')
+        self.result = result
+        self.N = N                          # of posts taken (top N list)
+        self._M, self._n = self._get_nums()   # of all and OOT posts
 
-    def _validate(self, results):
-        """Validate a list of result.
+    def _get_nums(self):
+        """Get the number of all and OOT posts."""
+        def get_num_oot(subresult):
+            return sum(is_oot for _, is_oot in subresult)
 
-        A list of result must have nonzero length and the same number of
-        posts as specified when creating evaluator object.
+        temp = [(len(subresult), get_num_oot(subresult))
+                for subresult in self.result]
+        num_post_tup, num_oot_tup = zip(*temp)
+        num_post, num_oot = list(set(num_post_tup)), list(set(num_oot_tup))
+
+        if len(num_post) > 1 or len(num_oot) > 1:
+            raise Exception('Number of posts or OOT posts mismatch')
+        if len(num_post) == 0 or len(num_oot) == 0:
+            return 0, 0
+        else:
+            return num_post[0], num_oot[0]
+
+    @lazyproperty
+    def min_sup(self):
+        """Return the minimum support value of random variable X.
+
+        X is a hypergeometric random variable associated with this event.
         """
-        if len(results) == 0:
-            raise Exception('Results cannot be empty.')
+        return max(self.N - self._M + self._n, 0)
 
-        size_tuples = [(len(result), sum(is_oot for _, is_oot in result))
-                       for result in results]
-        if len(set(size_tuples)) > 1 or size_tuples[0][0] != self.M or \
-                size_tuples[0][1] != self.n:
-            raise Exception('Number of posts mismatch.')
+    @lazyproperty
+    def max_sup(self):
+        """Return the maximum support value of random variable X.
+
+        X is a hypergeometric random variable associated with this event.
+        """
+        return min(self.N, self._n)
 
     @lazyproperty
     def baseline(self):
         """Return the baseline performance vector.
 
         The baseline is obtaining OOT posts by chance. Thus, the baseline
-        performance vector is the probability distribution of a hypergeometric
+        performance vector is the probability mass function of a hypergeometric
         random variable denoting the number of OOT posts in the top N list.
-        Vector length is n+1, with k-th element represents the probability of
-        getting k OOT posts in the top N list.
+        The k-th element represents the probability of getting k OOT posts in
+        the top N list.
         """
-        rv = hypergeom(self.M, self.n, self.N)
-        k = np.arange(0, self.n+1)
+        rv = hypergeom(self._M, self._n, self.N)
+        k = np.arange(self.min_sup, self.max_sup+1)
         return rv.pmf(k)
 
     @lazyproperty
-    def baseline_skew(self):
-        """Return the skewness measure of baseline."""
-        rv = hypergeom(self.M, self.n, self.N)
-        return float(rv.stats(moments='s'))
-
-    def get_performance(self, results):
+    def performance(self):
         """Return the evaluation result in a performance vector."""
-        self._validate(results)
+        num_expr = len(self.result)
+        top_oot_nums = [sum(is_oot for _, is_oot in subresult[:self.N])
+                        for subresult in self.result]
 
-        num_expr = len(results)
-        n = sum(is_oot for _, is_oot in results[0])
-        top_oot_nums = [sum(is_oot for _, is_oot in result[:self.N])
-                        for result in results]
-
-        res = np.zeros(n+1)
+        length = self.max_sup - self.min_sup + 1
+        res = np.zeros(length)
         count = Counter(top_oot_nums)
-        for k in range(n+1):
+        for k in range(length):
             res[k] = count[k] / num_expr
         return res
-
-    def get_performance_skew(self, results):
-        """Compute performance skewness unbiased estimate."""
-        self._validate(results)
-        top_oot_nums = [sum(is_oot for _, is_oot in result[:self.N])
-                        for result in results]
-        return skew(top_oot_nums, bias=False)
