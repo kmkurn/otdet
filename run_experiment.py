@@ -54,8 +54,8 @@ def evaluate(result, setting):
             evaluator.min_sup, evaluator.max_sup)
 
 
-def thread_dir_encode(dirname):
-    """Encode a thread directory name into shorter one."""
+def shorten(dirname):
+    """Shorten a thread directory name."""
     split_path = dirname.split(os.sep)
     thread, post = (split_path[-2], split_path[-1]) if split_path[-1] != '' \
         else (split_path[-3], split_path[-2])
@@ -115,8 +115,8 @@ if __name__ == '__main__':
             # Prepare Pandas MultiIndex tuples
             (norm_dir, oot_dir, num_norm, num_oot,
                 method, metric, num_top) = setting
-            norm_dir = thread_dir_encode(norm_dir)
-            oot_dir = thread_dir_encode(oot_dir)
+            norm_dir = shorten(norm_dir)
+            oot_dir = shorten(oot_dir)
             index_tup.append((norm_dir, oot_dir, method, metric))
             for res in ['base', 'perf']:
                 for k in range(min_sup, max_sup+1):
