@@ -3,7 +3,6 @@
 import argparse
 from glob import glob
 import itertools as it
-from multiprocessing import Pool
 import os
 import os.path
 import sys
@@ -101,8 +100,7 @@ if __name__ == '__main__':
                                args.num_top))
 
     # Do experiments
-    with Pool(processes=args.jobs) as pool:
-        results = pool.map_async(experiment, settings).get()
+    results = [experiment(setting) for setting in settings]
 
     index_tup, column_tup = [], []
     data = np.array([])
