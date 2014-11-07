@@ -17,7 +17,7 @@ from otdet.util import pick
 
 def experiment(setting):
     """Do experiment with the specified setting."""
-    norm_dir, oot_dir, num_norm, num_oot, method, metric, num_top = setting
+    method, metric, norm_dir, oot_dir, num_norm, num_oot, num_top = setting
     result = []
     for jj in range(args.niter):
         # Obtain normal posts
@@ -95,8 +95,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Experiment settings
-    settings = list(it.product(args.norm_dir, args.oot_dir, args.num_norm,
-                               args.num_oot, args.method, args.metric,
+    settings = list(it.product(args.method, args.metric, args.norm_dir,
+                               args.oot_dir, args.num_norm, args.num_oot,
                                args.num_top))
 
     # Do experiments
@@ -109,11 +109,13 @@ if __name__ == '__main__':
         baseline, performance, min_sup, max_sup = evaluate(result, setting)
 
         # Prepare Pandas MultiIndex tuples
-        (norm_dir, oot_dir, num_norm, num_oot,
-            method, metric, num_top) = setting
+        # (norm_dir, oot_dir, num_norm, num_oot,
+        #     method, metric, num_top) = setting
+        (method, metric, norm_dir, oot_dir,
+            num_norm, num_oot, num_top) = setting
         norm_dir = shorten(norm_dir)
         oot_dir = shorten(oot_dir)
-        index_tup.append((norm_dir, oot_dir, method, metric))
+        index_tup.append((method, metric, norm_dir, oot_dir))
         for res in ['base', 'perf']:
             for k in range(min_sup, max_sup+1):
                 column_tup.append((num_norm, num_oot, num_top, res, k))
@@ -137,7 +139,7 @@ if __name__ == '__main__':
             columns.append(col)
             st.add(col)
     # Prepare to store in HDF5 format
-    index_names = ['norm_dir', 'oot_dir', 'method', 'metric']
+    index_names = ['method', 'metric', 'norm_dir', 'oot_dir']
     column_names = ['num_norm', 'num_oot', 'num_top', 'result', 'k']
     index = pd.MultiIndex.from_tuples(index, names=index_names)
     columns = pd.MultiIndex.from_tuples(columns, names=column_names)
