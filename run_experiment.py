@@ -5,10 +5,12 @@ from collections import defaultdict
 from glob import glob
 import itertools as it
 from multiprocessing import Pool
+import os
 import os.path
 import sys
 
 import numpy as np
+import pandas as pd
 
 from otdet.detector import OOTDetector
 from otdet.evaluation import TopListEvaluator
@@ -52,6 +54,15 @@ def evaluate(result, setting):
             evaluator.min_sup, evaluator.max_sup)
 
 
+def thread_dir_encode(dirname):
+    """Encode a thread directory name into shorter one."""
+    split_path = dirname.split(os.sep)
+    thread, post = (split_path[-2], split_path[-1]) if split_path[-1] != '' \
+        else (split_path[-3], split_path[-2])
+    post_id = post.split('__')[0]
+    return thread[:3] + post_id
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run experiment with given '
                                      'settings')
@@ -79,6 +90,8 @@ if __name__ == '__main__':
                         help='Number of iteration for each method')
     parser.add_argument('-j', '--jobs', type=int, default=1,
                         help='Number of work processes')
+    parser.add_argument('-hdf', type=str,
+                        help='Directory to store the result as HDF5 format')
     args = parser.parse_args()
 
     # Experiment settings
@@ -90,14 +103,57 @@ if __name__ == '__main__':
     with Pool(processes=args.jobs) as pool:
         results = pool.map_async(experiment, settings).get()
 
-    # Store the report
     report = defaultdict(dict)
+    if args.hdf is not None:
+        index_tup, column_tup = [], []
+        data = np.array([])
     for setting, result in zip(settings, results):
+        # Evaluate the result of each setting
         baseline, performance, min_sup, max_sup = evaluate(result, setting)
+        # Prepare storing the result in HDF5 format
+        if args.hdf is not None:
+            # Prepare Pandas MultiIndex tuples
+            (norm_dir, oot_dir, num_norm, num_oot,
+                method, metric, num_top) = setting
+            norm_dir = thread_dir_encode(norm_dir)
+            oot_dir = thread_dir_encode(oot_dir)
+            index_tup.append((norm_dir, oot_dir, method, metric))
+            for res in ['base', 'perf']:
+                for k in range(min_sup, max_sup+1):
+                    column_tup.append((num_norm, num_oot, num_top, res, k))
+            # Prepare Pandas DataFrame data
+            data = np.concatenate((data, baseline))
+            data = np.concatenate((data, performance))
+        # Store the report
         report[setting]['baseline'] = baseline
         report[setting]['performance'] = performance
         report[setting]['min_sup'] = min_sup
         report[setting]['max_sup'] = max_sup
+
+    # Store the result in HDF5 format
+    if args.hdf is not None:
+        # Create index tuples list
+        st = set()
+        index = []
+        for idx in index_tup:
+            if idx not in st:
+                index.append(idx)
+                st.add(idx)
+        # Create column tuples list
+        st = set()
+        columns = []
+        for col in column_tup:
+            if col not in st:
+                columns.append(col)
+                st.add(col)
+        index_names = ['norm_dir', 'oot_dir', 'method', 'metric']
+        column_names = ['num_norm', 'num_oot', 'num_top', 'result', 'k']
+        index = pd.MultiIndex.from_tuples(index, names=index_names)
+        columns = pd.MultiIndex.from_tuples(columns, names=column_names)
+        df = pd.DataFrame(data.reshape((len(index), len(columns))),
+                          index=index, columns=columns)
+        df.to_hdf(args.hdf, 'df')
+        print("Stored in HDF5 format with the name 'df'")
 
     print('Done', file=sys.stderr, flush=True)
 
