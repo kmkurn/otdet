@@ -6,6 +6,7 @@ import warnings
 from nltk.corpus import cmudict
 from nltk.tokenize import word_tokenize, sent_tokenize
 import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 class ReadabilityMeasures:
@@ -13,11 +14,8 @@ class ReadabilityMeasures:
 
     d = cmudict.dict()
 
-    def __init__(self, input='string', lowercase=True, remove_punct=True,
-                 measures=None):
-        if input not in ['string', 'filename']:
-            raise Exception('`input` should be `string` or `filename`')
-        self.input = input
+    def __init__(self, lowercase=True, remove_punct=True, measures=None,
+                 **kwargs):
         self.lowercase = lowercase
         self.remove_punct = remove_punct
         if measures is None:
@@ -28,18 +26,21 @@ class ReadabilityMeasures:
         else:
             self.measures = measures
 
+    def fit(self, *args, **kwargs):
+        # Do nothing
+        pass
+
+    def fit_transform(self, documents):
+        # Directly transform
+        return self.transform(documents)
+
     def transform(self, documents):
         """Transform documents into vectors of readability measures."""
-        if self.input == 'filename':
-            contents = []
-            for doc in documents:
-                with open(doc) as f:
-                    contents.append(f.read())
-        else:
-            contents = list(documents)
 
         if self.lowercase:
-            contents = [content.lower() for content in contents[:]]
+            contents = [doc.lower() for doc in documents]
+        else:
+            contents = documents
 
         tokcontents = [self._tokenize_content(cont) for cont in contents]
         return np.array([self._to_vector(tcont) for tcont in tokcontents])
@@ -150,5 +151,23 @@ class ReadabilityMeasures:
     @lru_cache(maxsize=None)
     def avg_syllables(wordlen):
         """Return the avg number of syllables of words with given length."""
-        return mean(ReadabilityMeasures.num_syllables(w)
-                    for w in ReadabilityMeasures.d if len(w) == wordlen)
+        res = (ReadabilityMeasures.num_syllables(w)
+               for w in ReadabilityMeasures.d if len(w) == wordlen)
+        return mean(res)
+
+
+class CountVectorizerWrapper(CountVectorizer):
+    """Wrapper around CountVectorizer class in scikit-learn."""
+
+    def __init__(self, *args, **kwargs):
+        super(CountVectorizerWrapper, self).__init__(*args, **kwargs)
+
+    def fit_transform(self, *args, **kwargs):
+        """Wrapper around fit_transform() method in CountVectorizer."""
+        r = super(CountVectorizerWrapper, self).fit_transform(*args, **kwargs)
+        return r.toarray()
+
+    def transform(self, *args, **kwargs):
+        """Wrapper around transform() method in CountVectorizer."""
+        r = super(CountVectorizerWrapper, self).transform(*args, **kwargs)
+        return r.toarray()
