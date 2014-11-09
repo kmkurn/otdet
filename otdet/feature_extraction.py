@@ -155,8 +155,11 @@ class ReadabilityMeasures:
     @lru_cache(maxsize=None)
     def avg_syllables(wordlen):
         """Return the avg number of syllables of words with given length."""
-        res = (ReadabilityMeasures.num_syllables(w)
-               for w in ReadabilityMeasures.d if len(w) == wordlen)
+        res = [ReadabilityMeasures.num_syllables(w)
+               for w in ReadabilityMeasures.d if len(w) == wordlen]
+        if len(res) == 0:
+            res = [ReadabilityMeasures.num_syllables(w)
+                   for w in ReadabilityMeasures.d]
         return mean(res)
 
 
