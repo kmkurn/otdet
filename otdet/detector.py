@@ -32,12 +32,12 @@ class OOTDetector:
         """Compute MeanComp score of each document."""
         X = self.design_matrix(documents)
         m = X.shape[0]
-        res = np.zeros(m)
+        res = []
         for i, (comp, vec) in enumerate(LeaveOneOut(m)):
             v, u = np.mean(X[comp], axis=0), np.ravel(X[vec])
             distfunc = getattr(dist, metric)
-            res[i] = distfunc(u, v)
-        return res
+            res.append(distfunc(u, v))
+        return np.array(res)
 
     def txt_comp_dist(self, documents, metric='euclidean'):
         """Compute TxtCompDist score of each document."""
