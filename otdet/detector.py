@@ -5,41 +5,32 @@ Out-of-topic post detection methods.
 import numpy as np
 import scipy.spatial.distance as dist
 from sklearn.cross_validation import LeaveOneOut
-from sklearn.feature_extraction.text import CountVectorizer
 
-from otdet.util import lazyproperty
+from otdet.feature_extraction import CountVectorizerWrapper
 
 
 class OOTDetector:
     """Off-topic detection methods."""
 
-    def __init__(self, filenames):
-        self.filenames = filenames
+    def __init__(self, extractor=None):
+        if extractor is None:
+            self.extractor = CountVectorizerWrapper(input='content',
+                                                    stop_words='english')
+        else:
+            self.extractor = extractor
 
-    @lazyproperty
-    def design_matrix(self):
+    def design_matrix(self, documents):
         """Returns feature vector of each document as matrix."""
-        vectorizer = CountVectorizer(input='filename', stop_words='english')
-        return vectorizer.fit_transform(self.filenames).toarray()
+        return self.extractor.fit_transform(documents)
 
-    @lazyproperty
-    def contents(self):
-        """Returns the content of each document."""
-        res = []
-        for filename in self.filenames:
-            f = open(filename)
-            res.append(f.read())
-            f.close()
-        return res
-
-    def clust_dist(self, metric='euclidean'):
+    def clust_dist(self, documents, metric='euclidean'):
         """Compute ClustDist score of each document."""
-        X = self.design_matrix
+        X = self.design_matrix(documents)
         return np.mean(dist.squareform(dist.pdist(X, metric)), axis=0)
 
-    def mean_comp(self, metric='euclidean'):
+    def mean_comp(self, documents, metric='euclidean'):
         """Compute MeanComp score of each document."""
-        X = self.design_matrix
+        X = self.design_matrix(documents)
         m = X.shape[0]
         res = np.zeros(m)
         for i, (comp, vec) in enumerate(LeaveOneOut(m)):
@@ -48,15 +39,14 @@ class OOTDetector:
             res[i] = distfunc(u, v)
         return res
 
-    def txt_comp_dist(self, metric='euclidean'):
+    def txt_comp_dist(self, documents, metric='euclidean'):
         """Compute TxtCompDist score of each document."""
-        vectorizer = CountVectorizer(stop_words='english')
-        vectorizer.fit(self.contents)
+        self.extractor.fit(documents)
         res = []
-        for i, cont in enumerate(self.contents):
-            comp = ' '.join(self.contents[:i] + self.contents[i+1:])
-            u = vectorizer.transform([cont]).toarray()
-            v = vectorizer.transform([comp]).toarray()
+        for i, cont in enumerate(documents):
+            comp = ' '.join(documents[:i] + documents[i+1:])
+            u = self.extractor.transform([cont])
+            v = self.extractor.transform([comp])
             distfunc = getattr(dist, metric)
             res.append(distfunc(u, v))
         return np.array(res)
