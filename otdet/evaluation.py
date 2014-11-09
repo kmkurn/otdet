@@ -16,7 +16,7 @@ class TopListEvaluator:
     def __init__(self, result, N=1):
         if N < 0:
             raise Exception('Cannot pick negative number of posts in top list')
-        self.result = result
+        self.result = list(result)
         self.N = N                          # of posts taken (top N list)
         self._M, self._n = self._get_nums()   # of all and OOT posts
 

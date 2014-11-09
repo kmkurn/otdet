@@ -19,7 +19,6 @@ from otdet.util import pick
 
 def experiment(setting, niter):
     """Do experiment with the specified setting."""
-    result = []
     for jj in range(niter):
         # Obtain normal posts
         norm_files = pick(glob(os.path.join(setting.norm_dir, '*.txt')),
@@ -50,10 +49,7 @@ def experiment(setting, niter):
         # In case of tie, prioritize normal post (worst case)
         s = sorted(zip(distances, is_oot), key=lambda x: x[1])
         subresult = sorted(s, reverse=True)
-
-        # Append to result
-        result.append(subresult)
-    return result
+        yield subresult
 
 
 def evaluate(result, setting):
@@ -118,7 +114,7 @@ if __name__ == '__main__':
     settings = [ExprSetting(*sett) for sett in settings[:]]
 
     # Do experiments
-    results = [experiment(setting, args.niter) for setting in settings]
+    results = (experiment(setting, args.niter) for setting in settings)
 
     index_tup, column_tup = [], []
     data = np.array([])
