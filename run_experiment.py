@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from collections import namedtuple
 from glob import glob
 import itertools as it
 import os
@@ -12,27 +13,38 @@ import pandas as pd
 
 from otdet.detector import OOTDetector
 from otdet.evaluation import TopListEvaluator
+from otdet.feature_extraction import ReadabilityMeasures
 from otdet.util import pick
 
 
-def experiment(setting):
+def experiment(setting, niter):
     """Do experiment with the specified setting."""
-    method, metric, norm_dir, oot_dir, num_norm, num_oot, num_top = setting
     result = []
-    for jj in range(args.niter):
+    for jj in range(niter):
         # Obtain normal posts
-        norm_files = pick(glob(os.path.join(norm_dir, '*.txt')), k=num_norm,
-                          randomized=False)
+        norm_files = pick(glob(os.path.join(setting.norm_dir, '*.txt')),
+                          k=setting.num_norm, randomized=False)
         # Obtain OOT posts
-        oot_files = pick(glob(os.path.join(oot_dir, '*.txt')), k=num_oot)
+        oot_files = pick(glob(os.path.join(setting.oot_dir, '*.txt')),
+                         k=setting.num_oot)
         # Combine them both
         files = norm_files + oot_files
         is_oot = [False]*len(norm_files) + [True]*len(oot_files)
 
+        # Read files contents
+        documents = []
+        for file in files:
+            with open(file) as f:
+                documents.append(f.read())
+
         # Apply OOT post detection methods
-        detector = OOTDetector(files)
-        methodfunc = getattr(detector, method)
-        distances = methodfunc(metric=metric)
+        if setting.feature == 'unigram':
+            detector = OOTDetector()
+        else:
+            extractor = ReadabilityMeasures()
+            detector = OOTDetector(extractor=extractor)
+        func = getattr(detector, setting.method)
+        distances = func(documents, metric=setting.metric)
 
         # Construct ranked list of OOT posts (1: most off-topic)
         # In case of tie, prioritize normal post (worst case)
@@ -46,8 +58,7 @@ def experiment(setting):
 
 def evaluate(result, setting):
     """Evaluate an experiment result with the given setting."""
-    *_, num_top = setting
-    evaluator = TopListEvaluator(result, N=num_top)
+    evaluator = TopListEvaluator(result, N=setting.num_top)
     return (evaluator.baseline, evaluator.performance,
             evaluator.min_sup, evaluator.max_sup)
 
@@ -82,6 +93,9 @@ if __name__ == '__main__':
                         choices=['euclidean', 'cityblock', 'cosine',
                                  'correlation'],
                         help='Distance metric to use')
+    parser.add_argument('-f', '--feature', type=str, nargs='+', required=True,
+                        choices=['unigram', 'readability'],
+                        help='Text features to be used')
     parser.add_argument('-t', '--num-top', type=int, nargs='+', required=True,
                         help='Number of posts in top N list')
     parser.add_argument('--niter', type=int, default=1,
@@ -95,12 +109,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Experiment settings
-    settings = list(it.product(args.method, args.metric, args.norm_dir,
-                               args.oot_dir, args.num_norm, args.num_oot,
-                               args.num_top))
+    names = ['method', 'feature', 'metric', 'norm_dir', 'oot_dir', 'num_norm',
+             'num_oot', 'num_top']
+    ExprSetting = namedtuple('ExprSetting', names)
+    settings = list(it.product(args.method, args.feature, args.metric,
+                               args.norm_dir, args.oot_dir, args.num_norm,
+                               args.num_oot, args.num_top))
+    settings = [ExprSetting(*sett) for sett in settings[:]]
 
     # Do experiments
-    results = [experiment(setting) for setting in settings]
+    results = [experiment(setting, args.niter) for setting in settings]
 
     index_tup, column_tup = [], []
     data = np.array([])
@@ -109,16 +127,14 @@ if __name__ == '__main__':
         baseline, performance, min_sup, max_sup = evaluate(result, setting)
 
         # Prepare Pandas MultiIndex tuples
-        # (norm_dir, oot_dir, num_norm, num_oot,
-        #     method, metric, num_top) = setting
-        (method, metric, norm_dir, oot_dir,
-            num_norm, num_oot, num_top) = setting
-        norm_dir = shorten(norm_dir)
-        oot_dir = shorten(oot_dir)
-        index_tup.append((method, metric, norm_dir, oot_dir))
+        norm_dir = shorten(setting.norm_dir)
+        oot_dir = shorten(setting.oot_dir)
+        index_tup.append((setting.method, setting.feature, setting.metric,
+                          norm_dir, oot_dir))
         for res in ['base', 'perf']:
             for k in range(min_sup, max_sup+1):
-                column_tup.append((num_norm, num_oot, num_top, res, k))
+                column_tup.append((setting.num_norm, setting.num_oot,
+                                   setting.num_top, res, k))
 
         # Prepare Pandas DataFrame data
         data = np.concatenate((data, baseline))
@@ -138,13 +154,15 @@ if __name__ == '__main__':
         if col not in st:
             columns.append(col)
             st.add(col)
+
     # Prepare to store in HDF5 format
-    index_names = ['method', 'metric', 'norm_dir', 'oot_dir']
-    column_names = ['num_norm', 'num_oot', 'num_top', 'result', 'k']
+    index_names = names[:5]
+    column_names = names[5:] + ['result', 'k']
     index = pd.MultiIndex.from_tuples(index, names=index_names)
     columns = pd.MultiIndex.from_tuples(columns, names=column_names)
     df = pd.DataFrame(data.reshape((len(index), len(columns))),
                       index=index, columns=columns)
+
     # Store in HDF5 format
     df.to_hdf(args.hdf_name, args.hdf_key)
     print("Stored in HDF5 format with the name '{}'".format(args.hdf_key))
