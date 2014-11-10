@@ -13,6 +13,7 @@ class ReadabilityMeasures:
     """Extract features based on readablility measures."""
 
     d = cmudict.dict()
+    INF = 10**9
 
     def __init__(self, lowercase=True, remove_punct=True, measures=None,
                  **kwargs):
@@ -43,8 +44,6 @@ class ReadabilityMeasures:
             contents = documents
 
         tokcontents = [self._tokenize_content(cont) for cont in contents]
-        # Remove empty contents
-        tokcontents = [cont for cont in tokcontents[:] if len(cont) > 0]
         return np.array([self._to_vector(tcont) for tcont in tokcontents])
 
     def _tokenize_content(self, content):
@@ -68,7 +67,10 @@ class ReadabilityMeasures:
         nwords = cls.total_words(tokenized_content)
         nsents = cls.total_sents(tokenized_content)
         nsylls = cls.total_sylls(tokenized_content)
-        return 206.835 - 1.015*(nwords/nsents) - 84.6*(nsylls/nwords)
+        try:
+            return 206.835 - 1.015*(nwords/nsents) - 84.6*(nsylls/nwords)
+        except ZeroDivisionError:
+            return cls.INF
 
     @classmethod
     def fleschgrade(cls, tokenized_content):
@@ -76,7 +78,10 @@ class ReadabilityMeasures:
         nwords = cls.total_words(tokenized_content)
         nsents = cls.total_sents(tokenized_content)
         nsylls = cls.total_sylls(tokenized_content)
-        return 11.8*(nsylls/nwords) + 0.39*(nwords/nsents) - 15.59
+        try:
+            return 11.8*(nsylls/nwords) + 0.39*(nwords/nsents) - 15.59
+        except ZeroDivisionError:
+            return cls.INF
 
     @classmethod
     def fogindex(cls, tokenized_content):
@@ -85,7 +90,10 @@ class ReadabilityMeasures:
         nsents = cls.total_sents(tokenized_content)
         nwords3sylls = sum(sum(cls.num_syllables(w) >= 3 for w in s)
                            for s in tokenized_content)
-        return (nwords/nsents) + (nwords3sylls/nwords)*100
+        try:
+            return (nwords/nsents) + (nwords3sylls/nwords)*100
+        except ZeroDivisionError:
+            return cls.INF
 
     @classmethod
     def colemanliau(cls, tokenized_content):
@@ -93,7 +101,10 @@ class ReadabilityMeasures:
         nchars = cls.total_chars(tokenized_content)
         nwords = cls.total_words(tokenized_content)
         nsents = cls.total_sents(tokenized_content)
-        return 5.89*(nchars/nwords) - 0.3*(nsents/(nwords*100)) - 15.8
+        try:
+            return 5.89*(nchars/nwords) - 0.3*(nsents/(nwords*100)) - 15.8
+        except ZeroDivisionError:
+            return cls.INF
 
     @classmethod
     def ari(cls, tokenized_content):
@@ -101,7 +112,10 @@ class ReadabilityMeasures:
         nchars = cls.total_chars(tokenized_content)
         nwords = cls.total_words(tokenized_content)
         nsents = cls.total_sents(tokenized_content)
-        return 4.71*(nchars/nwords) + 0.5*(nwords/nsents) - 21.43
+        try:
+            return 4.71*(nchars/nwords) + 0.5*(nwords/nsents) - 21.43
+        except ZeroDivisionError:
+            return cls.INF
 
     @classmethod
     def lix(cls, tokenized_content):
@@ -110,7 +124,10 @@ class ReadabilityMeasures:
         nwords6chars = sum(sum(len(w) >= 6 for w in s)
                            for s in tokenized_content)
         nsents = cls.total_sents(tokenized_content)
-        return (nwords/nsents) + 100*(nwords6chars/nwords)
+        try:
+            return (nwords/nsents) + 100*(nwords6chars/nwords)
+        except ZeroDivisionError:
+            return cls.INF
 
     @classmethod
     def smog(cls, tokenized_content):
@@ -118,7 +135,10 @@ class ReadabilityMeasures:
         nwords3sylls = sum(sum(cls.num_syllables(w) >= 3 for w in s)
                            for s in tokenized_content)
         nsents = cls.total_sents(tokenized_content)
-        return 3 + ((nwords3sylls*30)/nsents)**0.5
+        try:
+            return 3 + ((nwords3sylls*30)/nsents)**0.5
+        except ZeroDivisionError:
+            return cls.INF
 
     @staticmethod
     def total_sents(tokenized_content):
