@@ -43,6 +43,8 @@ class ReadabilityMeasures:
             contents = documents
 
         tokcontents = [self._tokenize_content(cont) for cont in contents]
+        # Remove empty contents
+        tokcontents = [cont for cont in tokcontents[:] if len(cont) > 0]
         return np.array([self._to_vector(tcont) for tcont in tokcontents])
 
     def _tokenize_content(self, content):
