@@ -1,6 +1,9 @@
 # Command script
 run_experiment.sh
 
+# PyCharm
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
