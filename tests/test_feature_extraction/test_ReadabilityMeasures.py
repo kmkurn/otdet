@@ -289,3 +289,25 @@ class TestSmog:
         mock_total_sents.return_value = 0
         result = ReadabilityMeasures.smog([])
         assert_almost_equal(result, ReadabilityMeasures.INF)
+
+
+class TestNumSyllables:
+    d = {
+        'a': [['a1', 'b', 'c'], ['a', 'b2', 'c1']],
+        'b': [['a2', 'b1']],
+        'c': [['a', 'b', 'c'], ['a']]
+    }
+
+    @patch.object(ReadabilityMeasures, 'd', d)
+    def test_word_exist_in_corpus(self):
+        assert_almost_equal(ReadabilityMeasures.num_syllables('a'), 1.5)
+
+    @patch.object(ReadabilityMeasures, 'd', d)
+    def test_word_exist_in_corpus2(self):
+        assert_almost_equal(ReadabilityMeasures.num_syllables('c'), 0)
+
+    @patch.object(ReadabilityMeasures, 'd', d)
+    @patch.object(ReadabilityMeasures, 'avg_syllables')
+    def test_word_not_exist_in_corpus(self, mock_avg_syllables):
+        mock_avg_syllables.return_value = 5
+        assert_almost_equal(ReadabilityMeasures.num_syllables('f'), 5)
