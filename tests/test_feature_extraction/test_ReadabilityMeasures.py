@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from nose.tools import assert_equal
 import numpy as np
 from numpy.testing import assert_almost_equal
@@ -5,11 +7,19 @@ from numpy.testing import assert_almost_equal
 from otdet.feature_extraction import ReadabilityMeasures
 
 
+@patch('otdet.feature_extraction.sent_tokenize')
+@patch('otdet.feature_extraction.word_tokenize')
 class TestTokenizeContent:
     def setUp(self):
         self.content = 'Ani Budi Cika. Ani Cika.\nBudi.\n'
 
-    def test_default(self):
+    def test_default(self, mock_word_tokenize, mock_sent_tokenize):
+        mock_sent_tokenize.return_value = range(3)
+        mock_word_tokenize.side_effect = [
+            ['Ani', 'Budi', 'Cika', '.'],
+            ['Ani', 'Cika', '.'],
+            ['Budi', '.']
+        ]
         extractor = ReadabilityMeasures()
         expected = [
             ['Ani', 'Budi', 'Cika'],
@@ -17,14 +27,32 @@ class TestTokenizeContent:
             ['Budi']
         ]
         assert_equal(extractor._tokenize_content(self.content), expected)
+        mock_sent_tokenize.assert_called_with(self.content)
 
-    def test_no_remove_punct(self):
+    def test_no_remove_punct(self, mock_word_tokenize, mock_sent_tokenize):
+        mock_sent_tokenize.return_value = range(3)
+        mock_word_tokenize.side_effect = [
+            ['Ani', 'Budi', 'Cika', '.'],
+            ['Ani', 'Cika', '.'],
+            ['Budi', '.']
+        ]
         extractor = ReadabilityMeasures(remove_punct=False)
         expected = [
             ['Ani', 'Budi', 'Cika', '.'],
             ['Ani', 'Cika', '.'],
             ['Budi', '.']
         ]
+        assert_equal(extractor._tokenize_content(self.content), expected)
+
+    def test_all_punct(self, mock_word_tokenize, mock_sent_tokenize):
+        mock_sent_tokenize.return_value = range(3)
+        mock_word_tokenize.side_effect = [
+            ['.', '.', '.', '.'],
+            ['Ani', '!', '?'],
+            ['Cika', '.']
+        ]
+        extractor = ReadabilityMeasures()
+        expected = [['Ani'], ['Cika']]
         assert_equal(extractor._tokenize_content(self.content), expected)
 
 
