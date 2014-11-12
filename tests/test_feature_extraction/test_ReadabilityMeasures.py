@@ -232,13 +232,28 @@ class TestColemanliau:
 
 
 class TestAri:
-    def test_default(self):
-        tokenized_content = [
-            ['under', 'pressure'],
-            ['she', 'is', 'gregarious', 'and', 'gorgeous']
-        ]
-        result = ReadabilityMeasures.ari(tokenized_content)
-        assert_almost_equal(result, 6.56142857)
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_chars')
+    def test_default(self, mock_total_chars, mock_total_words,
+                     mock_total_sents):
+        mock_total_chars.return_value = 100
+        mock_total_words.return_value = 30
+        mock_total_sents.return_value = 5
+        result = ReadabilityMeasures.ari([])
+        assert_almost_equal(result, -2.72999999)
+
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    def test_zero_words(self, mock_total_words):
+        mock_total_words.return_value = 0
+        result = ReadabilityMeasures.ari([])
+        assert_almost_equal(result, ReadabilityMeasures.INF)
+
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    def test_zero_sents(self, mock_total_sents):
+        mock_total_sents.return_value = 0
+        result = ReadabilityMeasures.ari([])
+        assert_almost_equal(result, ReadabilityMeasures.INF)
 
 
 class TestLix:
