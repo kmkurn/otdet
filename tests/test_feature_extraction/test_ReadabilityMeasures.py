@@ -213,6 +213,9 @@ class TestFleschgrade:
 
 
 class TestFogindex:
+    def setUp(self):
+        self.tokenized_content = [['a', 'b'], ['c', 'd', 'e', 'f', 'g']]
+
     @patch.object(ReadabilityMeasures, 'total_sents')
     @patch.object(ReadabilityMeasures, 'total_words')
     @patch.object(ReadabilityMeasures, 'num_syllables')
@@ -221,18 +224,17 @@ class TestFogindex:
         mock_num_syllables.side_effect = [8, 2, 3, 1, 5, 6, 7]
         mock_total_words.return_value = 30
         mock_total_sents.return_value = 5
-        tokenized_content = [['a', 'b'], ['c', 'd', 'e', 'f', 'g']]
-        result = ReadabilityMeasures.fogindex(tokenized_content)
+        result = ReadabilityMeasures.fogindex(self.tokenized_content)
         assert_almost_equal(result, 22.66666667)
-        calls = [call(w) for s in tokenized_content for w in s]
+        calls = [call(w) for s in self.tokenized_content for w in s]
         mock_num_syllables.assert_has_calls(calls)
-        mock_total_words.assert_called_with(tokenized_content)
-        mock_total_sents.assert_called_with(tokenized_content)
+        mock_total_words.assert_called_with(self.tokenized_content)
+        mock_total_sents.assert_called_with(self.tokenized_content)
 
     @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
-        result = ReadabilityMeasures.fogindex([])
+        result = ReadabilityMeasures.fogindex([['a'], ['b']])
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
     @patch.object(ReadabilityMeasures, 'total_sents')
@@ -263,7 +265,7 @@ class TestColemanliau:
     @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
-        result = ReadabilityMeasures.colemanliau([])
+        result = ReadabilityMeasures.colemanliau(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
 
@@ -288,13 +290,13 @@ class TestAri:
     @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
-        result = ReadabilityMeasures.ari([])
+        result = ReadabilityMeasures.ari(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
     @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
-        result = ReadabilityMeasures.ari([])
+        result = ReadabilityMeasures.ari(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
 
