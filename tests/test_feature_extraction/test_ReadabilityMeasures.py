@@ -299,28 +299,32 @@ class TestAri:
 
 
 class TestLix:
+    def setUp(self):
+        self.tokenized_content = [
+            ['a', 'aaaaaa'],
+            ['aa', 'aaa', 'aaaaaaaa', 'aa', 'aaaaaaa']
+        ]
+
     @patch.object(ReadabilityMeasures, 'total_sents')
     @patch.object(ReadabilityMeasures, 'total_words')
     def test_default(self, mock_total_words, mock_total_sents):
         mock_total_words.return_value = 30
         mock_total_sents.return_value = 5
-        tokenized_content = [
-            ['a', 'aaaaaa'],
-            ['aa', 'aaa', 'aaaaaaaa', 'aa', 'aaaaaaa']
-        ]
-        result = ReadabilityMeasures.lix(tokenized_content)
+        result = ReadabilityMeasures.lix(self.tokenized_content)
         assert_almost_equal(result, 16)
+        mock_total_words.assert_called_with(self.tokenized_content)
+        mock_total_sents.assert_called_with(self.tokenized_content)
 
     @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
-        result = ReadabilityMeasures.lix([])
+        result = ReadabilityMeasures.lix(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
     @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
-        result = ReadabilityMeasures.lix([])
+        result = ReadabilityMeasures.lix(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
 
