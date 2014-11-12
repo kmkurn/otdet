@@ -8,6 +8,32 @@ from numpy.testing import assert_almost_equal
 from otdet.feature_extraction import ReadabilityMeasures
 
 
+@patch.object(ReadabilityMeasures, '_to_vector')
+@patch.object(ReadabilityMeasures, '_tokenize_content')
+class TestTransform:
+    def setUp(self):
+        self.documents = ['aa aaab. aab. a.', 'aa.\n', 'aa.\naaab.\n\naa!!']
+
+    def test_default(self, mock_tokenize_content, mock_to_vector):
+        expected = [np.array([1, 2]), np.array([3, 4]), np.array([5, 6])]
+        mock_tokenize_content.side_effect = [
+            [[['aa'], ['aaab']], [['aab']], [['a']]],
+            [[['aa']]],
+            [[['aa']], [['aaab']], [['aa']]]
+        ]
+        mock_to_vector.side_effect = expected
+        extractor = ReadabilityMeasures()
+        assert_almost_equal(extractor.transform(self.documents),
+                            np.array(expected))
+
+    def test_empty_content(self, mock_tokenize_content, mock_to_vector):
+        expected = [np.array([ReadabilityMeasures.INF])]
+        mock_tokenize_content.side_effect = [[]]
+        mock_to_vector.side_effect = expected
+        extractor = ReadabilityMeasures()
+        assert_almost_equal(extractor.transform(['..']), np.array(expected))
+
+
 class TestTokenizeContent(TestCase):
     def setUp(self):
         self.content = 'Ani Budi Cika. Ani Cika.\nBudi.\n'
