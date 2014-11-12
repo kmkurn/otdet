@@ -151,6 +151,9 @@ class TestTotalChars:
 
 
 class TestFleschease:
+    def setUp(self):
+        self.tokenized_content = [['1st', 'sent'], ['the', '2nd', 'sent']]
+
     @patch.object(ReadabilityMeasures, 'total_sents')
     @patch.object(ReadabilityMeasures, 'total_words')
     @patch.object(ReadabilityMeasures, 'total_sylls')
@@ -159,8 +162,11 @@ class TestFleschease:
         mock_total_sylls.return_value = 50
         mock_total_words.return_value = 30
         mock_total_sents.return_value = 5
-        result = ReadabilityMeasures.fleschease([])
+        result = ReadabilityMeasures.fleschease(self.tokenized_content)
         assert_almost_equal(result, 59.745)
+        mock_total_sylls.assert_called_with(self.tokenized_content)
+        mock_total_words.assert_called_with(self.tokenized_content)
+        mock_total_sents.assert_called_with(self.tokenized_content)
 
     @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
