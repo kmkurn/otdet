@@ -135,6 +135,8 @@ class TestTotalSylls:
                              ['a', 'aaa']]
         result = ReadabilityMeasures.total_sylls(tokenized_content)
         assert_almost_equal(result, 15)
+        calls = [call(w) for s in tokenized_content for w in s]
+        mock_num_syllables.assert_has_calls(calls)
 
 
 class TestTotalChars:
