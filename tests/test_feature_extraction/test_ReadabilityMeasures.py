@@ -108,24 +108,13 @@ class TestTotalWords:
 
 
 class TestTotalSylls:
-    def test_default(self):
-        tokenized_content = [
-            ['love', 'of', 'my', 'life'],
-            ['crazy', 'little', 'thing', 'called', 'love'],
-            ['under', 'pressure']
-        ]
+    @patch('otdet.feature_extraction.ReadabilityMeasures.num_syllables')
+    def test_default(self, mock_num_syllables):
+        mock_num_syllables.side_effect = [1, 2, 3, 3, 3, 2, 1]
+        tokenized_content = [['aa', 'aaa', 'aa'], ['aa', 'aaaaa'],
+                             ['a', 'aaa']]
         result = ReadabilityMeasures.total_sylls(tokenized_content)
         assert_almost_equal(result, 15)
-
-    def test_unknown_words(self):
-        tokenized_content = [
-            ['ani', 'budi', 'cika'],
-            ['ani', 'cika'],
-            ['budi']
-        ]
-        result = ReadabilityMeasures.total_sylls(tokenized_content)
-        expected = 7.838407863890021
-        assert_almost_equal(result, expected)
 
 
 class TestTotalChars:
