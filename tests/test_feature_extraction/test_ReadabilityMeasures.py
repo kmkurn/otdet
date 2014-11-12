@@ -370,6 +370,7 @@ class TestNumSyllables:
     def test_word_not_exist_in_corpus(self, mock_avg_syllables):
         mock_avg_syllables.return_value = 5
         assert_almost_equal(ReadabilityMeasures.num_syllables('f'), 5)
+        mock_avg_syllables.assert_called_with(1)
 
 
 @patch.object(ReadabilityMeasures, 'd', d)
