@@ -182,9 +182,9 @@ class TestFogindex:
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
     @patch('otdet.feature_extraction.ReadabilityMeasures.num_syllables')
-    def test_default(self, mock_numsyllables, mock_total_words,
+    def test_default(self, mock_num_syllables, mock_total_words,
                      mock_total_sents):
-        mock_numsyllables.side_effect = [8, 2, 3, 1, 5, 6, 7]
+        mock_num_syllables.side_effect = [8, 2, 3, 1, 5, 6, 7]
         mock_total_words.return_value = 30
         mock_total_sents.return_value = 5
         tokenized_content = [['a', 'b'], ['c', 'd', 'e', 'f', 'g']]
