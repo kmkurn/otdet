@@ -92,10 +92,14 @@ class TestToVector:
     @patch.object(ReadabilityMeasures, 'ari', return_value=2)
     @patch.object(ReadabilityMeasures, 'lix', return_value=3)
     def test_partial_measures(self, mock_lix, mock_ari, mock_smog):
+        tokenized_content = [['1st', 'sent'], ['2nd', 'sent']]
         extractor = ReadabilityMeasures(measures=['smog', 'ari', 'lix'])
         expected = np.arange(1, 4)
-        result = extractor._to_vector([])
+        result = extractor._to_vector(tokenized_content)
         assert_almost_equal(result, expected)
+        mock_lix.assert_called_with(tokenized_content)
+        mock_ari.assert_called_with(tokenized_content)
+        mock_smog.assert_called_with(tokenized_content)
 
 
 class TestTotalSents:
