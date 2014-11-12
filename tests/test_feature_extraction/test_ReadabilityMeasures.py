@@ -137,13 +137,29 @@ class TestTotalChars:
 
 
 class TestFleschease:
-    def test_default(self):
-        tokenized_content = [
-            ['under', 'pressure'],
-            ['she', 'is', 'gregarious', 'and', 'gorgeous']
-        ]
-        result = ReadabilityMeasures.fleschease(tokenized_content)
-        assert_almost_equal(result, 46.16821429)
+
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sylls')
+    def test_default(self, mock_total_sylls, mock_total_words,
+                     mock_total_sents):
+        mock_total_sylls.return_value = 50
+        mock_total_words.return_value = 30
+        mock_total_sents.return_value = 5
+        result = ReadabilityMeasures.fleschease([])
+        assert_almost_equal(result, 59.745)
+
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    def test_zero_words(self, mock_total_words):
+        mock_total_words.return_value = 0
+        result = ReadabilityMeasures.fleschease([])
+        assert_almost_equal(result, ReadabilityMeasures.INF)
+
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    def test_zero_sents(self, mock_total_sents):
+        mock_total_sents.return_value = 0
+        result = ReadabilityMeasures.fleschease([])
+        assert_almost_equal(result, ReadabilityMeasures.INF)
 
 
 class TestFleschgrade:
