@@ -62,23 +62,13 @@ class TestTokenizeContent(TestCase):
 
 
 class TestToVector:
-    def setUp(self):
-        self.tokenized_content = [
-            ['under', 'pressure'],
-            ['she', 'is', 'gregarious', 'and', 'gorgeous']
-        ]
-
-    def test_default(self):
-        extractor = ReadabilityMeasures()
-        expected = np.array([46.16821429, 7.68928571, 17.78571429,
-                             17.01485714, 6.5614286, 46.3571429, 6.8729833])
-        result = extractor._to_vector(self.tokenized_content)
-        assert_almost_equal(result, expected)
-
-    def test_partial_measures(self):
+    @patch.object(ReadabilityMeasures, 'smog', return_value=1)
+    @patch.object(ReadabilityMeasures, 'ari', return_value=2)
+    @patch.object(ReadabilityMeasures, 'lix', return_value=3)
+    def test_partial_measures(self, mock_lix, mock_ari, mock_smog):
         extractor = ReadabilityMeasures(measures=['smog', 'ari', 'lix'])
-        expected = np.array([6.8729833, 6.5614286, 46.3571429])
-        result = extractor._to_vector(self.tokenized_content)
+        expected = np.arange(1, 4)
+        result = extractor._to_vector([])
         assert_almost_equal(result, expected)
 
 
