@@ -47,8 +47,6 @@ class TestTokenizeContent(TestCase):
         self.addCleanup(p2.stop)
         self.mock_sent_tokenize = p1.start()
         self.mock_word_tokenize = p2.start()
-
-    def test_default(self):
         self.mock_sent_tokenize.return_value = ['Ani Budi Cika.', 'Ani Cika.',
                                                 'Budi']
         self.mock_word_tokenize.side_effect = [
@@ -56,6 +54,8 @@ class TestTokenizeContent(TestCase):
             ['Ani', 'Cika', '.'],
             ['Budi', '.']
         ]
+
+    def test_default(self):
         extractor = ReadabilityMeasures()
         expected = [
             ['Ani', 'Budi', 'Cika'],
@@ -68,12 +68,6 @@ class TestTokenizeContent(TestCase):
         self.mock_word_tokenize.assert_has_calls(calls)
 
     def test_no_remove_punct(self):
-        self.mock_sent_tokenize.return_value = range(3)
-        self.mock_word_tokenize.side_effect = [
-            ['Ani', 'Budi', 'Cika', '.'],
-            ['Ani', 'Cika', '.'],
-            ['Budi', '.']
-        ]
         extractor = ReadabilityMeasures(remove_punct=False)
         expected = [
             ['Ani', 'Budi', 'Cika', '.'],
@@ -83,7 +77,6 @@ class TestTokenizeContent(TestCase):
         assert_equal(extractor._tokenize_content(self.content), expected)
 
     def test_all_punct(self):
-        self.mock_sent_tokenize.return_value = range(3)
         self.mock_word_tokenize.side_effect = [
             ['.', '.', '.', '.'],
             ['Ani', '!', '?'],
