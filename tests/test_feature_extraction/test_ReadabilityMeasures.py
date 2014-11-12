@@ -108,7 +108,7 @@ class TestTotalWords:
 
 
 class TestTotalSylls:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.num_syllables')
+    @patch.object(ReadabilityMeasures, 'num_syllables')
     def test_default(self, mock_num_syllables):
         mock_num_syllables.side_effect = [1, 2, 3, 3, 3, 2, 1]
         tokenized_content = [['aa', 'aaa', 'aa'], ['aa', 'aaaaa'],
@@ -129,9 +129,9 @@ class TestTotalChars:
 
 
 class TestFleschease:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sylls')
+    @patch.object(ReadabilityMeasures, 'total_sents')
+    @patch.object(ReadabilityMeasures, 'total_words')
+    @patch.object(ReadabilityMeasures, 'total_sylls')
     def test_default(self, mock_total_sylls, mock_total_words,
                      mock_total_sents):
         mock_total_sylls.return_value = 50
@@ -140,13 +140,13 @@ class TestFleschease:
         result = ReadabilityMeasures.fleschease([])
         assert_almost_equal(result, 59.745)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
         result = ReadabilityMeasures.fleschease([])
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
         result = ReadabilityMeasures.fleschease([])
@@ -154,9 +154,9 @@ class TestFleschease:
 
 
 class TestFleschgrade:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sylls')
+    @patch.object(ReadabilityMeasures, 'total_sents')
+    @patch.object(ReadabilityMeasures, 'total_words')
+    @patch.object(ReadabilityMeasures, 'total_sylls')
     def test_default(self, mock_total_sylls, mock_total_words,
                      mock_total_sents):
         mock_total_sylls.return_value = 50
@@ -165,13 +165,13 @@ class TestFleschgrade:
         result = ReadabilityMeasures.fleschgrade([])
         assert_almost_equal(result, 6.41666667)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
         result = ReadabilityMeasures.fleschgrade([])
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
         result = ReadabilityMeasures.fleschgrade([])
@@ -179,9 +179,9 @@ class TestFleschgrade:
 
 
 class TestFogindex:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.num_syllables')
+    @patch.object(ReadabilityMeasures, 'total_sents')
+    @patch.object(ReadabilityMeasures, 'total_words')
+    @patch.object(ReadabilityMeasures, 'num_syllables')
     def test_default(self, mock_num_syllables, mock_total_words,
                      mock_total_sents):
         mock_num_syllables.side_effect = [8, 2, 3, 1, 5, 6, 7]
@@ -191,13 +191,13 @@ class TestFogindex:
         result = ReadabilityMeasures.fogindex(tokenized_content)
         assert_almost_equal(result, 22.66666667)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
         result = ReadabilityMeasures.fogindex([])
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
         result = ReadabilityMeasures.fogindex([])
@@ -205,9 +205,9 @@ class TestFogindex:
 
 
 class TestColemanliau:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_chars')
+    @patch.object(ReadabilityMeasures, 'total_sents')
+    @patch.object(ReadabilityMeasures, 'total_words')
+    @patch.object(ReadabilityMeasures, 'total_chars')
     def test_default(self, mock_total_chars, mock_total_words,
                      mock_total_sents):
         mock_total_chars.return_value = 100
@@ -216,7 +216,7 @@ class TestColemanliau:
         result = ReadabilityMeasures.colemanliau([])
         assert_almost_equal(result, 3.83283333)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
         result = ReadabilityMeasures.colemanliau([])
@@ -224,9 +224,9 @@ class TestColemanliau:
 
 
 class TestAri:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_chars')
+    @patch.object(ReadabilityMeasures, 'total_sents')
+    @patch.object(ReadabilityMeasures, 'total_words')
+    @patch.object(ReadabilityMeasures, 'total_chars')
     def test_default(self, mock_total_chars, mock_total_words,
                      mock_total_sents):
         mock_total_chars.return_value = 100
@@ -235,13 +235,13 @@ class TestAri:
         result = ReadabilityMeasures.ari([])
         assert_almost_equal(result, -2.72999999)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
         result = ReadabilityMeasures.ari([])
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
         result = ReadabilityMeasures.ari([])
@@ -249,8 +249,8 @@ class TestAri:
 
 
 class TestLix:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch.object(ReadabilityMeasures, 'total_sents')
+    @patch.object(ReadabilityMeasures, 'total_words')
     def test_default(self, mock_total_words, mock_total_sents):
         mock_total_words.return_value = 30
         mock_total_sents.return_value = 5
@@ -261,13 +261,13 @@ class TestLix:
         result = ReadabilityMeasures.lix(tokenized_content)
         assert_almost_equal(result, 16)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
+    @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
         mock_total_words.return_value = 0
         result = ReadabilityMeasures.lix([])
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
         result = ReadabilityMeasures.lix([])
@@ -275,8 +275,8 @@ class TestLix:
 
 
 class TestSmog:
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
-    @patch('otdet.feature_extraction.ReadabilityMeasures.num_syllables')
+    @patch.object(ReadabilityMeasures, 'total_sents')
+    @patch.object(ReadabilityMeasures, 'num_syllables')
     def test_default(self, mock_num_syllables, mock_total_sents):
         mock_num_syllables.side_effect = [8, 2, 3, 1, 5, 6, 7]
         mock_total_sents.return_value = 5
@@ -284,7 +284,7 @@ class TestSmog:
         result = ReadabilityMeasures.smog(tokenized_content)
         assert_almost_equal(result, 8.47722557)
 
-    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
         result = ReadabilityMeasures.smog([])
