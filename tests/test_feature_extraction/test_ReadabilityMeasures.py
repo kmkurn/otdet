@@ -311,3 +311,20 @@ class TestNumSyllables:
     def test_word_not_exist_in_corpus(self, mock_avg_syllables):
         mock_avg_syllables.return_value = 5
         assert_almost_equal(ReadabilityMeasures.num_syllables('f'), 5)
+
+
+class TestAvgSyllables:
+    d = {
+        'a': [['a1', 'b', 'c'], ['a', 'b2', 'c1']],
+        'b': [['a2', 'b1']],
+        'c': [['a', 'b', 'c'], ['a']],
+        'ab': [['a', 'b1'], ['b2', 'c3']]
+    }
+
+    @patch.object(ReadabilityMeasures, 'd', d)
+    def test_word_len_exist_in_corpus(self):
+        assert_almost_equal(ReadabilityMeasures.avg_syllables(1), 7/6)
+
+    @patch.object(ReadabilityMeasures, 'd', d)
+    def test_word_len_not_exist_in_corpus(self):
+        assert_almost_equal(ReadabilityMeasures.avg_syllables(3), 5/4)
