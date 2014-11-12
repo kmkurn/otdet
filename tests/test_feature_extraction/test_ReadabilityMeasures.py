@@ -137,7 +137,6 @@ class TestTotalChars:
 
 
 class TestFleschease:
-
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_sylls')
@@ -163,7 +162,6 @@ class TestFleschease:
 
 
 class TestFleschgrade:
-
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_sylls')
@@ -189,7 +187,6 @@ class TestFleschgrade:
 
 
 class TestFogindex:
-
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
     @patch('otdet.feature_extraction.ReadabilityMeasures.num_syllables')
@@ -216,7 +213,6 @@ class TestFogindex:
 
 
 class TestColemanliau:
-
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_words')
     @patch('otdet.feature_extraction.ReadabilityMeasures.total_chars')
