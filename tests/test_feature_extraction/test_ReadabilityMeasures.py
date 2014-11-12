@@ -224,6 +224,10 @@ class TestFogindex:
         tokenized_content = [['a', 'b'], ['c', 'd', 'e', 'f', 'g']]
         result = ReadabilityMeasures.fogindex(tokenized_content)
         assert_almost_equal(result, 22.66666667)
+        calls = [call(w) for s in tokenized_content for w in s]
+        mock_num_syllables.assert_has_calls(calls)
+        mock_total_words.assert_called_with(tokenized_content)
+        mock_total_sents.assert_called_with(tokenized_content)
 
     @patch.object(ReadabilityMeasures, 'total_words')
     def test_zero_words(self, mock_total_words):
