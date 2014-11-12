@@ -283,10 +283,17 @@ class TestLix:
 
 
 class TestSmog:
-    def test_default(self):
-        tokenized_content = [
-            ['under', 'pressure'],
-            ['she', 'is', 'gregarious', 'and', 'gorgeous']
-        ]
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    @patch('otdet.feature_extraction.ReadabilityMeasures.num_syllables')
+    def test_default(self, mock_num_syllables, mock_total_sents):
+        mock_num_syllables.side_effect = [8, 2, 3, 1, 5, 6, 7]
+        mock_total_sents.return_value = 5
+        tokenized_content = [['a', 'b'], ['c', 'd', 'e', 'f', 'g']]
         result = ReadabilityMeasures.smog(tokenized_content)
-        assert_almost_equal(result, 6.8729833)
+        assert_almost_equal(result, 8.47722557)
+
+    @patch('otdet.feature_extraction.ReadabilityMeasures.total_sents')
+    def test_zero_sents(self, mock_total_sents):
+        mock_total_sents.return_value = 0
+        result = ReadabilityMeasures.smog([])
+        assert_almost_equal(result, ReadabilityMeasures.INF)
