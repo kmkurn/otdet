@@ -329,19 +329,24 @@ class TestLix:
 
 
 class TestSmog:
+    def setUp(self):
+        self.tokenized_content = [['a', 'b'], ['c', 'd', 'e', 'f', 'g']]
+
     @patch.object(ReadabilityMeasures, 'total_sents')
     @patch.object(ReadabilityMeasures, 'num_syllables')
     def test_default(self, mock_num_syllables, mock_total_sents):
         mock_num_syllables.side_effect = [8, 2, 3, 1, 5, 6, 7]
         mock_total_sents.return_value = 5
-        tokenized_content = [['a', 'b'], ['c', 'd', 'e', 'f', 'g']]
-        result = ReadabilityMeasures.smog(tokenized_content)
+        result = ReadabilityMeasures.smog(self.tokenized_content)
         assert_almost_equal(result, 8.47722557)
+        calls = [call(w) for s in self.tokenized_content for w in s]
+        mock_num_syllables.assert_has_calls(calls)
+        mock_total_sents.assert_called_with(self.tokenized_content)
 
     @patch.object(ReadabilityMeasures, 'total_sents')
     def test_zero_sents(self, mock_total_sents):
         mock_total_sents.return_value = 0
-        result = ReadabilityMeasures.smog([])
+        result = ReadabilityMeasures.smog(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
 
