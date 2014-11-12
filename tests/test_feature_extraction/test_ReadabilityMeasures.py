@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from nose.tools import assert_equal
 import numpy as np
@@ -25,6 +25,10 @@ class TestTransform:
         extractor = ReadabilityMeasures()
         assert_almost_equal(extractor.transform(self.documents),
                             np.array(expected))
+        calls = [call(doc) for doc in self.documents]
+        mock_tokenize_content.assert_has_calls(calls)
+        calls = [call(tok) for tok in mock_tokenize_content.side_effect]
+        mock_to_vector.assert_has_calls(calls)
 
     def test_empty_content(self, mock_tokenize_content, mock_to_vector):
         expected = [np.array([ReadabilityMeasures.INF])]
@@ -45,7 +49,8 @@ class TestTokenizeContent(TestCase):
         self.mock_word_tokenize = p2.start()
 
     def test_default(self):
-        self.mock_sent_tokenize.return_value = range(3)
+        self.mock_sent_tokenize.return_value = ['Ani Budi Cika.', 'Ani Cika.',
+                                                'Budi']
         self.mock_word_tokenize.side_effect = [
             ['Ani', 'Budi', 'Cika', '.'],
             ['Ani', 'Cika', '.'],
@@ -59,6 +64,8 @@ class TestTokenizeContent(TestCase):
         ]
         assert_equal(extractor._tokenize_content(self.content), expected)
         self.mock_sent_tokenize.assert_called_with(self.content)
+        calls = [call(sent) for sent in self.mock_sent_tokenize.return_value]
+        self.mock_word_tokenize.assert_has_calls(calls)
 
     def test_no_remove_punct(self):
         self.mock_sent_tokenize.return_value = range(3)
