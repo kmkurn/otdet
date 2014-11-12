@@ -89,8 +89,11 @@ class TestTotalSents:
             ['ani', 'cika'],
             ['budi']
         ]
-        extractor = ReadabilityMeasures()
-        assert_equal(extractor.total_sents(tokenized_content), 3)
+        assert_equal(ReadabilityMeasures.total_sents(tokenized_content), 3)
+
+    def test_no_sentence(self):
+        tokenized_content = []
+        assert_equal(ReadabilityMeasures.total_sents(tokenized_content), 0)
 
 
 class TestTotalWords:
