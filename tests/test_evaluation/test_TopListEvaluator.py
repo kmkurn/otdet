@@ -35,17 +35,7 @@ class TestGetNums:
             [(5, False), (4, True), (3, False), (2, True), (1, False)]
         ]
         evaluator = TopListEvaluator(sample_result)
-        assert_equal(evaluator._M, 5)
-        assert_equal(evaluator._n, 2)
-        assert_equal(evaluator.N, 1)
-
-    def test_pick_many_top_list(self):
-        sample_result = [
-            [(5, True), (4, False), (3, True), (2, False), (1, False)],
-            [(5, False), (4, True), (3, False), (2, True), (1, False)]
-        ]
-        evaluator = TopListEvaluator(sample_result, N=3)
-        assert_equal(evaluator.N, 3)
+        assert_equal(evaluator._get_nums(), (5, 2))
 
     @raises(Exception)
     def test_num_oot_mismatch(self):
