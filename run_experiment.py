@@ -19,22 +19,25 @@ from otdet.util import pick
 
 def experiment(setting, niter):
     """Do experiment with the specified setting."""
+    # Obtain normal posts
+    norm_files = pick(glob(os.path.join(setting.norm_dir, '*.txt')),
+                      k=setting.num_norm, randomized=False)
+    norm_docs = []
+    for file in norm_files:
+        with open(file) as f:
+            norm_docs.append(f.read())
+
     for jj in range(niter):
-        # Obtain normal posts
-        norm_files = pick(glob(os.path.join(setting.norm_dir, '*.txt')),
-                          k=setting.num_norm, randomized=False)
         # Obtain OOT posts
         oot_files = pick(glob(os.path.join(setting.oot_dir, '*.txt')),
                          k=setting.num_oot)
-        # Combine them both
-        files = norm_files + oot_files
-        is_oot = [False]*len(norm_files) + [True]*len(oot_files)
-
-        # Read files contents
-        documents = []
-        for file in files:
+        oot_docs = []
+        for file in oot_files:
             with open(file) as f:
-                documents.append(f.read())
+                oot_docs.append(f.read())
+        # Combine them both
+        documents = norm_docs + oot_docs
+        is_oot = [False]*len(norm_files) + [True]*len(oot_files)
 
         # Apply OOT post detection methods
         if setting.feature == 'unigram':
