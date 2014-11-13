@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from nose.tools import raises, assert_equal
 from numpy.testing import assert_almost_equal
 import numpy as np
@@ -6,6 +8,27 @@ from otdet.evaluation import TopListEvaluator
 
 
 class TestInit:
+    def setUp(self):
+        self.sample_result = [
+            [(5, True), (4, False), (3, True), (2, False), (1, False)],
+            [(5, False), (4, True), (3, False), (2, True), (1, False)]
+        ]
+
+    @patch.object(TopListEvaluator, '_get_nums')
+    def test_default(self, mock_get_nums):
+        mock_get_nums.return_value = 5, 2
+        evaluator = TopListEvaluator(self.sample_result, N=3)
+        assert_equal(evaluator.result, self.sample_result)
+        assert_equal(evaluator.N, 3)
+        assert_equal(evaluator._M, 5)
+        assert_equal(evaluator._n, 2)
+
+    @raises(Exception)
+    def test_pick_negative(self):
+        TopListEvaluator(self.sample_result, N=-1)
+
+
+class TestGetNums:
     def test_default(self):
         sample_result = [
             [(5, True), (4, False), (3, True), (2, False), (1, False)],
@@ -39,14 +62,6 @@ class TestInit:
             [(5, False), (4, True), (3, False), (2, True), (1, False)]
         ]
         TopListEvaluator(sample_result)
-
-    @raises(Exception)
-    def test_pick_negative(self):
-        sample_result = [
-            [(5, True), (4, False), (3, True), (2, False), (1, False)],
-            [(5, False), (4, True), (3, False), (2, True), (1, False)]
-        ]
-        TopListEvaluator(sample_result, N=-1)
 
 
 class TestBaseline:
