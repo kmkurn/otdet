@@ -1,7 +1,7 @@
 from nose.tools import assert_true
 from numpy.testing import assert_almost_equal
 import numpy as np
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from otdet.detector import OOTDetector
 from otdet.feature_extraction import CountVectorizerWrapper, \
@@ -82,16 +82,21 @@ class TestMeanComp:
 class TestTxtCompDist:
     def setUp(self):
         self.detector = OOTDetector()
+        self.documents = ['a b b c\n', 'a b\n', 'c c.\n']
 
-    def test_univariate(self):
-        sample_contents = [
-            'ani ani\n',
-            'ani ani ani\n',
-            'ani ani ani ani ani\n'
-        ]
-        expected = np.array([6, 4, 0])
-        result = self.detector.txt_comp_dist(sample_contents)
+    @patch.object(CountVectorizerWrapper, 'fit')
+    @patch.object(CountVectorizerWrapper, 'transform')
+    def test_univariate(self, mock_transform, mock_fit):
+        mock_transform.side_effect = [2, 10, 3, 7, 1, 12]
+        expected = np.array([8, 4, 11])
+        result = self.detector.txt_comp_dist(self.documents)
         assert_almost_equal(result, expected)
+        calls = []
+        for i, doc in enumerate(self.documents):
+            calls.append(call([doc]))
+            comp = ' '.join(self.documents[:i] + self.documents[i+1:])
+            calls.append(call([comp]))
+        mock_transform.assert_has_calls(calls)
 
     def test_multivariate(self):
         sample_contents = [
