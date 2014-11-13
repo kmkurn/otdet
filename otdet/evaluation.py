@@ -71,6 +71,8 @@ class TopListEvaluator:
     def performance(self):
         """Return the evaluation result in a performance vector."""
         num_expr = len(self.result)
+        if num_expr == 0:
+            raise Exception('No experiment error')
         top_oot_nums = [sum(is_oot for _, is_oot in subresult[:self.N])
                         for subresult in self.result]
 

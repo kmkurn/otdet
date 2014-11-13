@@ -94,7 +94,7 @@ class TestBaseline:
         ]
         self.evaluator = TopListEvaluator(sample_result, N=3)
 
-    def test_normal_case(self):
+    def test_default(self):
         expected = np.array([0.1, 0.6, 0.3])  # 0 <= k <= 2
         assert_almost_equal(self.evaluator.baseline, expected)
 
@@ -119,7 +119,12 @@ class TestPerformance:
         ]
         self.evaluator = TopListEvaluator(sample_result, N=3)
 
-    def test_normal_case(self):
+    def test_default(self):
         expected = np.array([0.25, 0.25, 0.50])  # 0 <= k <= 2
         result = self.evaluator.performance
         assert_almost_equal(result, expected)
+
+    @raises(Exception)
+    def test_no_subresult(self):
+        evaluator = TopListEvaluator([])
+        evaluator.performance
