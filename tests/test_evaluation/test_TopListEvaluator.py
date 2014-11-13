@@ -17,11 +17,22 @@ class TestInit:
     @patch.object(TopListEvaluator, '_get_nums')
     def test_default(self, mock_get_nums):
         mock_get_nums.return_value = 5, 2
-        evaluator = TopListEvaluator(self.sample_result, N=3)
+        evaluator = TopListEvaluator(self.sample_result)
         assert_equal(evaluator.result, self.sample_result)
-        assert_equal(evaluator.N, 3)
-        assert_equal(evaluator._M, 5)
-        assert_equal(evaluator._n, 2)
+        assert_equal(evaluator.N, 1)
+        assert_equal(evaluator.M, 5)
+        assert_equal(evaluator.n, 2)
+
+    def test_no_guess_M_n(self):
+        evaluator = TopListEvaluator(self.sample_result, M=5, n=2)
+        assert_equal(evaluator.result, self.sample_result)
+        assert_equal(evaluator.N, 1)
+        assert_equal(evaluator.M, 5)
+        assert_equal(evaluator.n, 2)
+
+    @raises(Exception)
+    def test_invalid_M_n(self):
+        TopListEvaluator(self.sample_result, M=5, n=6)
 
     @raises(Exception)
     def test_pick_negative(self):
