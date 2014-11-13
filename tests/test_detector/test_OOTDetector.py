@@ -79,18 +79,19 @@ class TestMeanComp:
         mock_design_matrix.assert_called_with(self.documents)
 
 
+@patch.object(CountVectorizerWrapper, 'fit')
+@patch.object(CountVectorizerWrapper, 'transform')
 class TestTxtCompDist:
     def setUp(self):
         self.detector = OOTDetector()
         self.documents = ['a b b c\n', 'a b\n', 'c c.\n']
 
-    @patch.object(CountVectorizerWrapper, 'fit')
-    @patch.object(CountVectorizerWrapper, 'transform')
     def test_univariate(self, mock_transform, mock_fit):
         mock_transform.side_effect = [2, 10, 3, 7, 1, 12]
         expected = np.array([8, 4, 11])
         result = self.detector.txt_comp_dist(self.documents)
         assert_almost_equal(result, expected)
+        mock_fit.assert_called_with(self.documents)
         calls = []
         for i, doc in enumerate(self.documents):
             calls.append(call([doc]))
@@ -98,12 +99,12 @@ class TestTxtCompDist:
             calls.append(call([comp]))
         mock_transform.assert_has_calls(calls)
 
-    def test_multivariate(self):
-        sample_contents = [
-            'ani budi budi cika\n',
-            'ani budi\n',
-            'cika cika\n'
+    def test_multivariate(self, mock_transform, mock_fit):
+        mock_transform.side_effect = [
+            np.array([1, 2, 3]), np.array([2, 1, 4]),
+            np.array([1, 0, 2]), np.array([3, 1, 2]),
+            np.array([1, 1, 2]), np.array([1, 2, 4])
         ]
-        expected = np.sqrt(np.array([2, 10, 14]))
-        result = self.detector.txt_comp_dist(sample_contents)
+        expected = np.sqrt(np.array([3, 5, 5]))
+        result = self.detector.txt_comp_dist(self.documents)
         assert_almost_equal(result, expected)
