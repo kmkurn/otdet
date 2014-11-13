@@ -13,12 +13,20 @@ from otdet.util import lazyproperty
 class TopListEvaluator:
     """Evaluate performance of OOT detector based on ranked result list."""
 
-    def __init__(self, result, N=1):
+    def __init__(self, result, M=None, n=None, N=1):
         if N < 0:
             raise Exception('Cannot pick negative number of posts in top list')
         self.result = list(result)
         self.N = N                          # of posts taken (top N list)
-        self._M, self._n = self._get_nums()   # of all and OOT posts
+        if M is None or n is None:
+            Mtemp, ntemp = self._get_nums()
+            self.M = Mtemp if M is None else M
+            self.n = ntemp if n is None else n
+        else:
+            self.M, self.n = M, n
+        # Check validity of M and n
+        if self.M < self.n:
+            raise Exception('M should never be less than n')
 
     def _get_nums(self):
         """Get the number of all and OOT posts."""
@@ -43,7 +51,7 @@ class TopListEvaluator:
 
         X is a hypergeometric random variable associated with this event.
         """
-        return max(self.N - self._M + self._n, 0)
+        return max(self.N - self.M + self.n, 0)
 
     @lazyproperty
     def max_sup(self):
@@ -51,7 +59,7 @@ class TopListEvaluator:
 
         X is a hypergeometric random variable associated with this event.
         """
-        return min(self.N, self._n)
+        return min(self.N, self.n)
 
     @lazyproperty
     def baseline(self):
@@ -63,7 +71,7 @@ class TopListEvaluator:
         The k-th element represents the probability of getting k OOT posts in
         the top N list.
         """
-        rv = hypergeom(self._M, self._n, self.N)
+        rv = hypergeom(self.M, self.n, self.N)
         k = np.arange(self.min_sup, self.max_sup+1)
         return rv.pmf(k)
 
