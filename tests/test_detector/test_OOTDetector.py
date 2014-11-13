@@ -1,8 +1,22 @@
+from nose.tools import assert_true
 from numpy.testing import assert_almost_equal
 import numpy as np
 from unittest.mock import patch
 
 from otdet.detector import OOTDetector
+from otdet.feature_extraction import CountVectorizerWrapper, \
+    ReadabilityMeasures
+
+
+class TestInit:
+    def test_default(self):
+        detector = OOTDetector()
+        assert_true(hasattr(detector, 'extractor'))
+        assert_true(isinstance(detector.extractor, CountVectorizerWrapper))
+
+    def test_custom_extractor(self):
+        detector = OOTDetector(extractor=ReadabilityMeasures())
+        assert_true(isinstance(detector.extractor, ReadabilityMeasures))
 
 
 class TestDesignMatrix:
