@@ -20,15 +20,15 @@ class TestInit:
 
 
 class TestDesignMatrix:
-    def test_default(self):
-        detector = OOTDetector()
-        documents = [
-            'ani budi cika. cika budi.',
-            'budi cika. ani ani cika.'
-        ]
-        result = detector.design_matrix(documents)
+    @patch.object(CountVectorizerWrapper, 'fit_transform')
+    def test_default(self, mock_fit_transform):
         expected = np.array([[1, 2, 2], [2, 1, 2]])
+        mock_fit_transform.return_value = expected
+        detector = OOTDetector()
+        documents = ['a b c. c b.', 'b c. a a c.']
+        result = detector.design_matrix(documents)
         assert_almost_equal(result, expected)
+        mock_fit_transform.assert_called_with(documents)
 
 
 class TestClustDist:
