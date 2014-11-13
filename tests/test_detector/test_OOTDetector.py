@@ -55,28 +55,28 @@ class TestClustDist:
         mock_design_matrix.assert_called_with(self.documents)
 
 
+@patch.object(OOTDetector, 'design_matrix')
 class TestMeanComp:
     def setUp(self):
         self.detector = OOTDetector()
-        self.documents = [
-            'ani budi cika. cika budi.',
-            'budi cika. ani ani cika.'
-        ]
+        self.documents = ['a b c. c b.', 'b c. a a c.']
 
-    def test_univariate(self):
+    def test_univariate(self, mock_design_matrix):
         X = np.array([[2], [-1], [3]])
-        with patch('otdet.detector.OOTDetector.design_matrix', return_value=X):
-            expected = np.array([1, 7/2, 5/2])
-            result = self.detector.mean_comp(self.documents)
-            assert_almost_equal(result, expected)
+        mock_design_matrix.return_value = X
+        expected = np.array([1, 7/2, 5/2])
+        result = self.detector.mean_comp(self.documents)
+        assert_almost_equal(result, expected)
+        mock_design_matrix.assert_called_with(self.documents)
 
-    def test_multivariate(self):
+    def test_multivariate(self, mock_design_matrix):
         X = np.array([[2, 1, 0], [-1, 3, 4], [2, -2, 1]])
-        with patch('otdet.detector.OOTDetector.design_matrix', return_value=X):
-            expected = np.array([9/2, 10, 13/2])
-            result = self.detector.mean_comp(self.documents,
-                                             metric='cityblock')
-            assert_almost_equal(result, expected)
+        mock_design_matrix.return_value = X
+        expected = np.array([9/2, 10, 13/2])
+        result = self.detector.mean_comp(self.documents,
+                                         metric='cityblock')
+        assert_almost_equal(result, expected)
+        mock_design_matrix.assert_called_with(self.documents)
 
 
 class TestTxtCompDist:
