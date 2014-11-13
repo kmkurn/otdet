@@ -8,6 +8,19 @@ from numpy.testing import assert_almost_equal
 from otdet.feature_extraction import ReadabilityMeasures
 
 
+class TestFitTransform:
+    def setUp(self):
+        self.documents = ['First document.', 'Second.\nDocument.\n']
+
+    @patch.object(ReadabilityMeasures, 'transform')
+    def test_default(self, mock_transform):
+        expected = np.array([np.array([1, 2]), np.array([3, 4])])
+        mock_transform.return_value = expected
+        extractor = ReadabilityMeasures()
+        assert_almost_equal(extractor.fit_transform(self.documents), expected)
+        mock_transform.assert_called_with(self.documents)
+
+
 @patch.object(ReadabilityMeasures, '_to_vector')
 @patch.object(ReadabilityMeasures, '_tokenize_content')
 class TestTransform:
