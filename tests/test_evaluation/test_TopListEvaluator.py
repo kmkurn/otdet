@@ -54,6 +54,22 @@ class TestGetNums:
         TopListEvaluator(sample_result)
 
 
+class TestMinSup:
+    def setUp(self):
+        self.sample_result = [
+            [(5, True), (4, False), (3, True), (2, False), (1, False)],
+            [(5, False), (4, True), (3, False), (2, True), (1, False)]
+        ]
+
+    def test_default(self):
+        evaluator = TopListEvaluator(self.sample_result, N=4)
+        assert_equal(evaluator.min_sup, 1)
+
+    def test_default2(self):
+        evaluator = TopListEvaluator(self.sample_result, N=2)
+        assert_equal(evaluator.min_sup, 0)
+
+
 class TestBaseline:
     def setUp(self):
         sample_result = [
