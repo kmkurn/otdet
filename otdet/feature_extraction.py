@@ -185,6 +185,14 @@ class ReadabilityMeasures:
         return mean(res)
 
 
+class TokenizedContent:
+    def __init__(self, content, remove_punct=True):
+        self._tokcont = [word_tokenize(s) for s in sent_tokenize(content)]
+        if remove_punct:
+            self._tokcont = [[w for w in s if w not in punctuation]
+                             for s in self._tokcont[:]]
+
+
 class CountVectorizerWrapper(CountVectorizer):
     """Wrapper around CountVectorizer class in scikit-learn."""
 
