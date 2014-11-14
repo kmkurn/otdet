@@ -23,10 +23,10 @@ class TopListEvaluator:
             self.M = Mtemp if M is None else M
             self.n = ntemp if n is None else n
         else:
+            # Check validity of M and n
+            if M < n:
+                raise Exception('M should never be less than n')
             self.M, self.n = M, n
-        # Check validity of M and n
-        if self.M < self.n:
-            raise Exception('M should never be less than n')
 
     def _get_nums(self):
         """Get the number of all and OOT posts."""
