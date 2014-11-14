@@ -136,7 +136,7 @@ class ReadabilityMeasures:
         """Return the SMOG index."""
         nwords3sylls = sum(sum(cls.num_syllables(w) >= 3 for w in s)
                            for s in tokenized_content)
-        nsents = cls.total_sents(tokenized_content)
+        nsents = tokenized_content.num_sents
         try:
             return 3 + ((nwords3sylls*30)/nsents)**0.5
         except ZeroDivisionError:
