@@ -115,31 +115,6 @@ class TestToVector:
         mock_smog.assert_called_with(tokenized_content)
 
 
-class TestTotalSents:
-    def test_default(self):
-        tokenized_content = [
-            ['ani', 'budi', 'cika'],
-            ['ani', 'cika'],
-            ['budi']
-        ]
-        assert_equal(ReadabilityMeasures.total_sents(tokenized_content), 3)
-
-    def test_no_sentence(self):
-        tokenized_content = []
-        assert_equal(ReadabilityMeasures.total_sents(tokenized_content), 0)
-
-
-class TestTotalWords:
-    def test_default(self):
-        tokenized_content = [
-            ['ani', 'budi', 'cika'],
-            ['ani', 'cika'],
-            ['budi']
-        ]
-        extractor = ReadabilityMeasures()
-        assert_equal(extractor.total_words(tokenized_content), 6)
-
-
 class TestTotalSylls:
     @patch.object(ReadabilityMeasures, 'num_syllables')
     def test_default(self, mock_num_syllables):
@@ -150,17 +125,6 @@ class TestTotalSylls:
         assert_almost_equal(result, 15)
         calls = [call(w) for s in tokenized_content for w in s]
         mock_num_syllables.assert_has_calls(calls)
-
-
-class TestTotalChars:
-    def test_default(self):
-        tokenized_content = [
-            ['ani', 'budi', 'cika'],
-            ['ani', 'cika'],
-            ['budi']
-        ]
-        extractor = ReadabilityMeasures()
-        assert_equal(extractor.total_chars(tokenized_content), 22)
 
 
 @patch.object(ReadabilityMeasures, 'total_sylls', return_value=50)

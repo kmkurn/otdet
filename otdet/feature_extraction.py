@@ -143,25 +143,10 @@ class ReadabilityMeasures:
             return cls.INF
 
     @staticmethod
-    def total_sents(tokenized_content):
-        """Return the total number of sentences in a tokenized content."""
-        return len(tokenized_content)
-
-    @staticmethod
-    def total_words(tokenized_content):
-        """Return the total number of words in a tokenized content."""
-        return sum(len(s) for s in tokenized_content)
-
-    @staticmethod
     def total_sylls(tokenized_content):
         """Return the total number of syllables in a tokenized content."""
         return sum(sum(ReadabilityMeasures.num_syllables(w) for w in s)
                    for s in tokenized_content)
-
-    @staticmethod
-    def total_chars(tokenized_content):
-        """Return the total number of characters in a tokenized content."""
-        return sum(sum(len(w) for w in s) for s in tokenized_content)
 
     @staticmethod
     @lru_cache(maxsize=None)
