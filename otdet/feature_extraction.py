@@ -196,6 +196,7 @@ class TokenizedContent:
 
     @lazyproperty
     def num_words(self):
+        """Return the total number of words."""
         return sum(len(s) for s in self._tokcont)
 
 
