@@ -59,7 +59,10 @@ def experiment(setting, niter):
 
 def evaluate(result, setting):
     """Evaluate an experiment result with the given setting."""
-    evaluator = TopListEvaluator(result, N=setting.num_top)
+    n = setting.num_oot
+    M = setting.num_norm + n
+    N = setting.num_top
+    evaluator = TopListEvaluator(result, M=M, n=n, N=N)
     return (evaluator.baseline, evaluator.performance,
             evaluator.min_sup, evaluator.max_sup)
 
