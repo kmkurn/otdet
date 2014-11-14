@@ -30,8 +30,9 @@ if __name__ == '__main__':
 
     index = df.index.copy()
     columns = pd.MultiIndex.from_tuples(columns)
-    df2 = pd.DataFrame(data.reshape((len(index), len(columns))), index=index,
-                       columns=columns)
+    m, n = len(index), len(columns)
+    data = data.reshape((n, m))
+    df2 = pd.DataFrame(data.T, index=index, columns=columns)
 
     df2.to_hdf(args.outfile, args.hdf_key)
     print("Stored in HDF5 format with the name '{}'".format(args.hdf_key))
