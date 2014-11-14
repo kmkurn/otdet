@@ -33,6 +33,18 @@ content = 'a b c.\na, b.'
 tokcont = [['a', 'b', 'c'], ['a', 'b']]
 
 
+class TestNumSents:
+    def test_default(self):
+        tc = TokenizedContent(content)
+        tc._tokcont = tokcont
+        assert_equal(tc.num_sents, 2)
+
+    def test_no_sents(self):
+        tc = TokenizedContent(content)
+        tc._tokcont = []
+        assert_equal(tc.num_sents, 0)
+
+
 class TestNumWords:
     def test_default(self):
         tc = TokenizedContent(content)
