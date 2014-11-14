@@ -38,7 +38,7 @@ def experiment(setting, niter):
                 oot_docs.append(f.read())
         # Combine them both
         documents = norm_docs + oot_docs
-        is_oot = [False]*len(norm_files) + [True]*len(oot_files)
+        is_oot = [False]*setting.num_norm + [True]*setting.num_oot
 
         # Apply OOT post detection methods
         if setting.feature == 'unigram':
