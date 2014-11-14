@@ -77,8 +77,8 @@ class ReadabilityMeasures:
     @classmethod
     def fleschgrade(cls, tokenized_content):
         """Return the Flesch-Kinaid Grade Level measure."""
-        nwords = cls.total_words(tokenized_content)
-        nsents = cls.total_sents(tokenized_content)
+        nwords = tokenized_content.num_words
+        nsents = tokenized_content.num_sents
         nsylls = cls.total_sylls(tokenized_content)
         try:
             return 11.8*(nsylls/nwords) + 0.39*(nwords/nsents) - 15.59
