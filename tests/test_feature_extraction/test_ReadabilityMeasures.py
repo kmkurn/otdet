@@ -19,31 +19,27 @@ class TestFitTransform:
         mock_transform.assert_called_with(self.documents)
 
 
+@patch('otdet.feature_extraction.TokenizedContent')
 @patch.object(ReadabilityMeasures, '_to_vector')
-@patch.object(ReadabilityMeasures, '_tokenize_content')
 class TestTransform:
     def setUp(self):
         self.documents = ['aa aaab. aab. a.', 'aa.\n', 'aa.\naaab.\n\naa!!']
 
-    def test_default(self, mock_tokenize_content, mock_to_vector):
+    def test_default(self, mock_to_vector, MockTokenizedContent):
         expected = [np.array([1, 2]), np.array([3, 4]), np.array([5, 6])]
-        mock_tokenize_content.side_effect = [
-            [[['aa'], ['aaab']], [['aab']], [['a']]],
-            [[['aa']]],
-            [[['aa']], [['aaab']], [['aa']]]
-        ]
+        MockTokenizedContent.side_effect = [Mock(), Mock(), Mock()]
         mock_to_vector.side_effect = expected
         extractor = ReadabilityMeasures()
         assert_almost_equal(extractor.transform(self.documents),
                             np.array(expected))
-        calls = [call(doc) for doc in self.documents]
-        mock_tokenize_content.assert_has_calls(calls)
-        calls = [call(tok) for tok in mock_tokenize_content.side_effect]
+        calls = [call(doc, extractor.remove_punct) for doc in self.documents]
+        MockTokenizedContent.assert_has_calls(calls)
+        calls = [call(tok) for tok in MockTokenizedContent.side_effect]
         mock_to_vector.assert_has_calls(calls)
 
-    def test_empty_content(self, mock_tokenize_content, mock_to_vector):
+    def test_empty_content(self, mock_to_vector, MockTokenizedContent):
         expected = [np.array([ReadabilityMeasures.INF])]
-        mock_tokenize_content.side_effect = [[]]
+        MockTokenizedContent.return_value = Mock()
         mock_to_vector.side_effect = expected
         extractor = ReadabilityMeasures()
         assert_almost_equal(extractor.transform(['..']), np.array(expected))

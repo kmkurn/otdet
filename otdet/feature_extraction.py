@@ -45,7 +45,8 @@ class ReadabilityMeasures:
         else:
             contents = documents
 
-        tokcontents = [self._tokenize_content(cont) for cont in contents]
+        tokcontents = [TokenizedContent(cont, self.remove_punct)
+                       for cont in contents]
         return np.array([self._to_vector(tcont) for tcont in tokcontents])
 
     def _to_vector(self, tokenized_content):
