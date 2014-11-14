@@ -122,10 +122,10 @@ class ReadabilityMeasures:
     @classmethod
     def lix(cls, tokenized_content):
         """Return the Lix formula."""
-        nwords = cls.total_words(tokenized_content)
+        nwords = tokenized_content.num_words
         nwords6chars = sum(sum(len(w) >= 6 for w in s)
                            for s in tokenized_content)
-        nsents = cls.total_sents(tokenized_content)
+        nsents = tokenized_content.num_sents
         try:
             return (nwords/nsents) + 100*(nwords6chars/nwords)
         except ZeroDivisionError:
