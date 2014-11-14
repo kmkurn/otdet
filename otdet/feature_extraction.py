@@ -111,9 +111,9 @@ class ReadabilityMeasures:
     @classmethod
     def ari(cls, tokenized_content):
         """Return the Automated Readability Index."""
-        nchars = cls.total_chars(tokenized_content)
-        nwords = cls.total_words(tokenized_content)
-        nsents = cls.total_sents(tokenized_content)
+        nchars = tokenized_content.num_chars
+        nwords = tokenized_content.num_words
+        nsents = tokenized_content.num_sents
         try:
             return 4.71*(nchars/nwords) + 0.5*(nwords/nsents) - 21.43
         except ZeroDivisionError:

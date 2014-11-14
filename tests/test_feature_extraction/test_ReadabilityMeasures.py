@@ -257,31 +257,22 @@ class TestColemanliau:
 
 class TestAri:
     def setUp(self):
-        self.tokenized_content = [['1st', 'sent'], ['the', '2nd', 'sent']]
+        self.tokenized_content = Mock(spec=TokenizedContent)
+        self.tokenized_content.num_chars = 100
+        self.tokenized_content.num_words = 30
+        self.tokenized_content.num_sents = 5
 
-    @patch.object(ReadabilityMeasures, 'total_sents')
-    @patch.object(ReadabilityMeasures, 'total_words')
-    @patch.object(ReadabilityMeasures, 'total_chars')
-    def test_default(self, mock_total_chars, mock_total_words,
-                     mock_total_sents):
-        mock_total_chars.return_value = 100
-        mock_total_words.return_value = 30
-        mock_total_sents.return_value = 5
+    def test_default(self):
         result = ReadabilityMeasures.ari(self.tokenized_content)
         assert_almost_equal(result, -2.72999999)
-        mock_total_chars.assert_called_with(self.tokenized_content)
-        mock_total_words.assert_called_with(self.tokenized_content)
-        mock_total_sents.assert_called_with(self.tokenized_content)
 
-    @patch.object(ReadabilityMeasures, 'total_words')
-    def test_zero_words(self, mock_total_words):
-        mock_total_words.return_value = 0
+    def test_zero_words(self):
+        self.tokenized_content.num_words = 0
         result = ReadabilityMeasures.ari(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    @patch.object(ReadabilityMeasures, 'total_sents')
-    def test_zero_sents(self, mock_total_sents):
-        mock_total_sents.return_value = 0
+    def test_zero_sents(self):
+        self.tokenized_content.num_sents = 0
         result = ReadabilityMeasures.ari(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
