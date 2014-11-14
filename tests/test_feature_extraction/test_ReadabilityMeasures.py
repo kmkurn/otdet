@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import call, patch, Mock
+from unittest.mock import call, patch, Mock, MagicMock
 
 from nose.tools import assert_equal
 import numpy as np
@@ -198,12 +198,12 @@ class TestFleschgrade:
         assert_almost_equal(result, 6.41666667)
         mock_total_sylls.assert_called_with(self.tokenized_content)
 
-    def test_zero_words(self):
+    def test_zero_words(self, mock_total_sylls):
         self.tokenized_content.num_words = 0
         result = ReadabilityMeasures.fleschgrade(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    def test_zero_sents(self, mock_total_sents):
+    def test_zero_sents(self, mock_total_sylls):
         self.tokenized_content.num_sents = 0
         result = ReadabilityMeasures.fleschgrade(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
