@@ -100,9 +100,9 @@ class ReadabilityMeasures:
     @classmethod
     def colemanliau(cls, tokenized_content):
         """Return the Coleman-Liau formula."""
-        nchars = cls.total_chars(tokenized_content)
-        nwords = cls.total_words(tokenized_content)
-        nsents = cls.total_sents(tokenized_content)
+        nchars = tokenized_content.num_chars
+        nwords = tokenized_content.num_words
+        nsents = tokenized_content.num_sents
         try:
             return 5.89*(nchars/nwords) - 0.3*(nsents/(nwords*100)) - 15.8
         except ZeroDivisionError:
