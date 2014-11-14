@@ -204,6 +204,11 @@ class TokenizedContent:
         """Return the total number of words."""
         return sum(len(s) for s in self._tokcont)
 
+    @lazyproperty
+    def num_chars(self):
+        """Return the total number of chars."""
+        return sum(sum(len(w) for w in s) for s in self._tokcont)
+
 
 class CountVectorizerWrapper(CountVectorizer):
     """Wrapper around CountVectorizer class in scikit-learn."""

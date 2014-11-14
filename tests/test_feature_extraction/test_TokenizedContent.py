@@ -55,3 +55,15 @@ class TestNumWords:
         tc = TokenizedContent(content)
         tc._tokcont = []
         assert_equal(tc.num_words, 0)
+
+
+class TestNumChars:
+    def test_default(self):
+        tc = TokenizedContent(content)
+        tc._tokcont = tokcont
+        assert_equal(tc.num_chars, 5)
+
+    def test_no_chars(self):
+        tc = TokenizedContent(content)
+        tc._tokcont = []
+        assert_equal(tc.num_chars, 0)
