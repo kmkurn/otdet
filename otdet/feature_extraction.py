@@ -8,6 +8,8 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
+from otdet.util import lazyproperty
+
 
 class ReadabilityMeasures:
     """Extract features based on readablility measures."""
@@ -191,6 +193,10 @@ class TokenizedContent:
         if remove_punct:
             self._tokcont = [[w for w in s if w not in punctuation]
                              for s in self._tokcont[:]]
+
+    @lazyproperty
+    def num_words(self):
+        return sum(len(s) for s in self._tokcont)
 
 
 class CountVectorizerWrapper(CountVectorizer):
