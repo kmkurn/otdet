@@ -1,3 +1,6 @@
+# IPython notebook directory
+ipynb/
+
 # Command script
 run_experiment.sh
 
