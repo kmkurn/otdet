@@ -180,6 +180,9 @@ class TokenizedContent:
         if remove_punct:
             self._tokcont = [[w for w in s if w not in punctuation]
                              for s in self._tokcont[:]]
+        # Remove zero-length sentence
+        self._tokcont = [s for s in self._tokcont[:] if len(s) > 0]
+
 
     @lazyproperty
     def num_sents(self):

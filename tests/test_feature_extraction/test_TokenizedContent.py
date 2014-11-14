@@ -28,6 +28,16 @@ class TestInit:
         tc = TokenizedContent(content, remove_punct=False)
         assert_equal(tc._tokcont, expected)
 
+    def test_all_punct(self, mock_word_tokenize, mock_sent_tokenize):
+        expected = [['a'], ['c']]
+        mock_sent_tokenize.return_value = ['....', 'a!?', 'c.']
+        mock_word_tokenize.side_effect = [
+            ['.', '.', '.', '.'], ['a', '!', '?'], ['c', '.']
+        ]
+        content = '....\n\na!?\nc.\n'
+        tc = TokenizedContent(content)
+        assert_equal(tc._tokcont, expected)
+
 
 content = 'a b c.\na, b.'
 tokcont = [['a', 'b', 'c'], ['a', 'b']]
