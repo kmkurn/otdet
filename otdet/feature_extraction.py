@@ -188,6 +188,8 @@ class ReadabilityMeasures:
 
 
 class TokenizedContent:
+    """Class representing a tokenized content."""
+
     def __init__(self, content, remove_punct=True):
         self._tokcont = [word_tokenize(s) for s in sent_tokenize(content)]
         if remove_punct:
