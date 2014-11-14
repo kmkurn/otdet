@@ -174,6 +174,8 @@ class TokenizedContent:
         # Remove zero-length sentence
         self._tokcont = [s for s in self._tokcont[:] if len(s) > 0]
 
+    def __iter__(self):
+        return iter(self._tokcont)
 
     @lazyproperty
     def num_sents(self):
