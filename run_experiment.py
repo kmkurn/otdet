@@ -6,6 +6,7 @@ from glob import glob
 import itertools as it
 import os
 import os.path
+import random
 
 import numpy as np
 import pandas as pd
@@ -18,25 +19,29 @@ from otdet.util import pick
 
 def experiment(setting, niter):
     """Do experiment with the specified setting."""
-    # Obtain normal posts
+    # Obtain normal and OOT posts
     norm_files = pick(glob(os.path.join(setting.norm_dir, '*.txt')),
                       k=setting.num_norm, randomized=False)
+    oot_files = pick(glob(os.path.join(setting.oot_dir, '*.txt')),
+                     k=10000, randomized=False)
+
+    # Read their contents
     norm_docs = []
     for file in norm_files:
         with open(file) as f:
             norm_docs.append(f.read())
+    oot_docs = []
+    for file in oot_files:
+        with open(file) as f:
+            oot_docs.append(f.read())
 
     res = []
     for jj in range(niter):
-        # Obtain OOT posts
-        oot_files = pick(glob(os.path.join(setting.oot_dir, '*.txt')),
-                         k=setting.num_oot)
-        oot_docs = []
-        for file in oot_files:
-            with open(file) as f:
-                oot_docs.append(f.read())
+        # Shuffle OOT posts
+        random.shuffle(oot_docs)
+
         # Combine them both
-        documents = norm_docs + oot_docs
+        documents = norm_docs + oot_docs[:setting.num_oot]
         is_oot = [False]*setting.num_norm + [True]*setting.num_oot
 
         # Apply OOT post detection methods
