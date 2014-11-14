@@ -66,8 +66,8 @@ class ReadabilityMeasures:
     @classmethod
     def fleschease(cls, tokenized_content):
         """Return the Flesch-Kindaid Reading Ease measure."""
-        nwords = cls.total_words(tokenized_content)
-        nsents = cls.total_sents(tokenized_content)
+        nwords = tokenized_content.num_words
+        nsents = tokenized_content.num_sents
         nsylls = cls.total_sylls(tokenized_content)
         try:
             return 206.835 - 1.015*(nwords/nsents) - 84.6*(nsylls/nwords)

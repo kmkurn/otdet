@@ -1,11 +1,11 @@
 from unittest import TestCase
-from unittest.mock import call, patch
+from unittest.mock import call, patch, Mock
 
 from nose.tools import assert_equal
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from otdet.feature_extraction import ReadabilityMeasures
+from otdet.feature_extraction import ReadabilityMeasures, TokenizedContent
 
 
 class TestFitTransform:
@@ -163,34 +163,26 @@ class TestTotalChars:
         assert_equal(extractor.total_chars(tokenized_content), 22)
 
 
+@patch.object(ReadabilityMeasures, 'total_sylls', return_value=50)
 class TestFleschease:
     def setUp(self):
-        self.tokenized_content = [['1st', 'sent'], ['the', '2nd', 'sent']]
+        self.tokenized_content = Mock(spec=TokenizedContent)
+        self.tokenized_content.num_words = 30
+        self.tokenized_content.num_sents = 5
 
-    @patch.object(ReadabilityMeasures, 'total_sents')
-    @patch.object(ReadabilityMeasures, 'total_words')
-    @patch.object(ReadabilityMeasures, 'total_sylls')
-    def test_default(self, mock_total_sylls, mock_total_words,
-                     mock_total_sents):
-        mock_total_sylls.return_value = 50
-        mock_total_words.return_value = 30
-        mock_total_sents.return_value = 5
+    def test_default(self, mock_total_sylls):
         result = ReadabilityMeasures.fleschease(self.tokenized_content)
         assert_almost_equal(result, 59.745)
         mock_total_sylls.assert_called_with(self.tokenized_content)
-        mock_total_words.assert_called_with(self.tokenized_content)
-        mock_total_sents.assert_called_with(self.tokenized_content)
 
-    @patch.object(ReadabilityMeasures, 'total_words')
-    def test_zero_words(self, mock_total_words):
-        mock_total_words.return_value = 0
-        result = ReadabilityMeasures.fleschease([])
+    def test_zero_words(self, mock_total_sylls):
+        self.tokenized_content.num_words = 0
+        result = ReadabilityMeasures.fleschease(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
-    @patch.object(ReadabilityMeasures, 'total_sents')
-    def test_zero_sents(self, mock_total_sents):
-        mock_total_sents.return_value = 0
-        result = ReadabilityMeasures.fleschease([])
+    def test_zero_sents(self, mock_total_sylls):
+        self.tokenized_content.num_sents = 0
+        result = ReadabilityMeasures.fleschease(self.tokenized_content)
         assert_almost_equal(result, ReadabilityMeasures.INF)
 
 
