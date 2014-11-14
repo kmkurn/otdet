@@ -1,7 +1,5 @@
-from unittest import TestCase
 from unittest.mock import call, patch, Mock, MagicMock
 
-from nose.tools import assert_equal
 import numpy as np
 from numpy.testing import assert_almost_equal
 
@@ -49,55 +47,6 @@ class TestTransform:
         mock_to_vector.side_effect = expected
         extractor = ReadabilityMeasures()
         assert_almost_equal(extractor.transform(['..']), np.array(expected))
-
-
-class TestTokenizeContent(TestCase):
-    def setUp(self):
-        self.content = 'Ani Budi Cika. Ani Cika.\nBudi.\n'
-        p1 = patch('otdet.feature_extraction.sent_tokenize')
-        p2 = patch('otdet.feature_extraction.word_tokenize')
-        self.addCleanup(p1.stop)
-        self.addCleanup(p2.stop)
-        self.mock_sent_tokenize = p1.start()
-        self.mock_word_tokenize = p2.start()
-        self.mock_sent_tokenize.return_value = ['Ani Budi Cika.', 'Ani Cika.',
-                                                'Budi']
-        self.mock_word_tokenize.side_effect = [
-            ['Ani', 'Budi', 'Cika', '.'],
-            ['Ani', 'Cika', '.'],
-            ['Budi', '.']
-        ]
-
-    def test_default(self):
-        extractor = ReadabilityMeasures()
-        expected = [
-            ['Ani', 'Budi', 'Cika'],
-            ['Ani', 'Cika'],
-            ['Budi']
-        ]
-        assert_equal(extractor._tokenize_content(self.content), expected)
-        self.mock_sent_tokenize.assert_called_with(self.content)
-        calls = [call(sent) for sent in self.mock_sent_tokenize.return_value]
-        self.mock_word_tokenize.assert_has_calls(calls)
-
-    def test_no_remove_punct(self):
-        extractor = ReadabilityMeasures(remove_punct=False)
-        expected = [
-            ['Ani', 'Budi', 'Cika', '.'],
-            ['Ani', 'Cika', '.'],
-            ['Budi', '.']
-        ]
-        assert_equal(extractor._tokenize_content(self.content), expected)
-
-    def test_all_punct(self):
-        self.mock_word_tokenize.side_effect = [
-            ['.', '.', '.', '.'],
-            ['Ani', '!', '?'],
-            ['Cika', '.']
-        ]
-        extractor = ReadabilityMeasures()
-        expected = [['Ani'], ['Cika']]
-        assert_equal(extractor._tokenize_content(self.content), expected)
 
 
 class TestToVector:

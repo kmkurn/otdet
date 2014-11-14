@@ -48,16 +48,6 @@ class ReadabilityMeasures:
         tokcontents = [self._tokenize_content(cont) for cont in contents]
         return np.array([self._to_vector(tcont) for tcont in tokcontents])
 
-    def _tokenize_content(self, content):
-        """Tokenize content into list of word lists."""
-        res = [word_tokenize(s) for s in sent_tokenize(content)]
-        if self.remove_punct:
-            res = [[w for w in s if w not in punctuation] for s in res[:]]
-        # Remove empty words/sentence
-        res = [s for s in res[:] if len(s) > 0]
-        res = [[w for w in s if len(w) > 0] for s in res[:]]
-        return res
-
     def _to_vector(self, tokenized_content):
         """Convert a tokenized content to a feature vector."""
         return np.array([getattr(self, m)(tokenized_content)
