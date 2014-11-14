@@ -38,3 +38,8 @@ class TestNumWords:
         tc = TokenizedContent(content)
         tc._tokcont = tokcont
         assert_equal(tc.num_words, 5)
+
+    def test_no_words(self):
+        tc = TokenizedContent(content)
+        tc._tokcont = []
+        assert_equal(tc.num_words, 0)
