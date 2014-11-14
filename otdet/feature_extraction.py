@@ -88,8 +88,8 @@ class ReadabilityMeasures:
     @classmethod
     def fogindex(cls, tokenized_content):
         """Return the Gunning-Fog index."""
-        nwords = cls.total_words(tokenized_content)
-        nsents = cls.total_sents(tokenized_content)
+        nwords = tokenized_content.num_words
+        nsents = tokenized_content.num_sents
         nwords3sylls = sum(sum(cls.num_syllables(w) >= 3 for w in s)
                            for s in tokenized_content)
         try:
