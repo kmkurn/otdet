@@ -27,6 +27,7 @@ def experiment(setting, niter):
         with open(file) as f:
             norm_docs.append(f.read())
 
+    res = []
     for jj in range(niter):
         # Obtain OOT posts
         oot_files = pick(glob(os.path.join(setting.oot_dir, '*.txt')),
@@ -52,7 +53,8 @@ def experiment(setting, niter):
         # In case of tie, prioritize normal post (worst case)
         s = sorted(zip(distances, is_oot), key=lambda x: x[1])
         subresult = sorted(s, reverse=True)
-        yield subresult
+        res.append(subresult)
+    return res
 
 
 def evaluate(result, setting):
