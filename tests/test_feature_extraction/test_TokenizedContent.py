@@ -34,7 +34,7 @@ tokcont = [['a', 'b', 'c'], ['a', 'b']]
 
 
 class TestNumWords:
-    @patch.object(TokenizedContent, '_tokcont', tokcont)
     def test_default(self):
         tc = TokenizedContent(content)
+        tc._tokcont = tokcont
         assert_equal(tc.num_words, 5)
