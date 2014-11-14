@@ -6,7 +6,6 @@ from glob import glob
 import itertools as it
 import os
 import os.path
-import sys
 
 import numpy as np
 import pandas as pd
@@ -170,5 +169,3 @@ if __name__ == '__main__':
     # Store in HDF5 format
     df.to_hdf(args.hdf_name, args.hdf_key)
     print("Stored in HDF5 format with the name '{}'".format(args.hdf_key))
-
-    print('Done', file=sys.stderr, flush=True)
