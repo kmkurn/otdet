@@ -13,7 +13,8 @@ import pandas as pd
 
 from otdet.detector import OOTDetector
 from otdet.evaluation import TopListEvaluator
-from otdet.feature_extraction import ReadabilityMeasures
+from otdet.feature_extraction import (ReadabilityMeasures,
+                                      CountVectorizerWrapper)
 from otdet.util import pick
 
 
@@ -46,7 +47,11 @@ def experiment(setting, niter):
 
         # Apply OOT post detection methods
         if setting.feature == 'unigram':
-            detector = OOTDetector()
+            max_features = setting.max_features
+            extractor = CountVectorizerWrapper(input='content',
+                                               stop_words='english',
+                                               max_features=max_features)
+            detector = OOTDetector(extractor=extractor)
         else:
             extractor = ReadabilityMeasures()
             detector = OOTDetector(extractor=extractor)
@@ -106,6 +111,8 @@ if __name__ == '__main__':
                         help='Text features to be used')
     parser.add_argument('-t', '--num-top', type=int, nargs='+', required=True,
                         help='Number of posts in top N list')
+    parser.add_argument('--max-features', type=int, nargs='*',
+                        help='Max number of vocabs (only for unigram feature)')
     parser.add_argument('--niter', type=int, default=1,
                         help='Number of iteration for each method')
     parser.add_argument('-j', '--jobs', type=int, default=1,
@@ -117,12 +124,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Experiment settings
-    names = ['method', 'feature', 'metric', 'norm_dir', 'oot_dir', 'num_norm',
-             'num_oot', 'num_top']
+    names = ['method', 'feature', 'max_features', 'metric', 'norm_dir',
+             'oot_dir', 'num_norm', 'num_oot', 'num_top']
     ExprSetting = namedtuple('ExprSetting', names)
-    settings = list(it.product(args.method, args.feature, args.metric,
-                               args.norm_dir, args.oot_dir, args.num_norm,
-                               args.num_oot, args.num_top))
+    if args.max_features is None:
+        args.max_features = [None]
+    settings = list(it.product(args.method, args.feature, args.max_features,
+                               args.metric, args.norm_dir, args.oot_dir,
+                               args.num_norm, args.num_oot, args.num_top))
     settings = [ExprSetting(*sett) for sett in settings[:]]
 
     # Do experiments
@@ -137,8 +146,10 @@ if __name__ == '__main__':
         # Prepare Pandas MultiIndex tuples
         norm_dir = shorten(setting.norm_dir)
         oot_dir = shorten(setting.oot_dir)
-        index_tup.append((setting.method, setting.feature, setting.metric,
-                          norm_dir, oot_dir))
+        max_features = 'all' if setting.max_features is None \
+                       else setting.max_features
+        index_tup.append((setting.method, setting.feature, max_features,
+                          setting.metric, norm_dir, oot_dir))
         for res in ['base', 'perf']:
             for k in range(min_sup, max_sup+1):
                 column_tup.append((setting.num_norm, setting.num_oot,
@@ -164,8 +175,8 @@ if __name__ == '__main__':
             st.add(col)
 
     # Prepare to store in HDF5 format
-    index_names = names[:5]
-    column_names = names[5:] + ['result', 'k']
+    index_names = names[:6]
+    column_names = names[6:] + ['result', 'k']
     index = pd.MultiIndex.from_tuples(index, names=index_names)
     columns = pd.MultiIndex.from_tuples(columns, names=column_names)
     df = pd.DataFrame(data.reshape((len(index), len(columns))),
