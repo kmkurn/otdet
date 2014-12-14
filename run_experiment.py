@@ -48,6 +48,12 @@ def experiment(setting, niter):
         # Apply OOT post detection methods
         if setting.feature == 'unigram':
             max_features = setting.max_features
+            if type(max_features) == float:
+                extractor = CountVectorizerWrapper(input='content',
+                                                   stop_words='english')
+                extractor.fit(documents)
+                num_features = len(extractor.vocabulary_)
+                max_features = int(max_features * num_features)
             extractor = CountVectorizerWrapper(input='content',
                                                stop_words='english',
                                                max_features=max_features)
@@ -111,7 +117,7 @@ if __name__ == '__main__':
                         help='Text features to be used')
     parser.add_argument('-t', '--num-top', type=int, nargs='+', required=True,
                         help='Number of posts in top N list')
-    parser.add_argument('--max-features', type=int, nargs='*',
+    parser.add_argument('--max-features', nargs='*', default=None,
                         help='Max number of vocabs (only for unigram feature)')
     parser.add_argument('--niter', type=int, default=1,
                         help='Number of iteration for each method')
