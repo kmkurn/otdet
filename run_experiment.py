@@ -146,7 +146,7 @@ if __name__ == '__main__':
     settings = [ExprSetting(*sett) for sett in settings[:]]
 
     # Do experiments
-    results = [experiment(setting, args.niter) for setting in settings]
+    results = (experiment(setting, args.niter) for setting in settings)
 
     index_tup, column_tup = [], []
     data = np.array([])
