@@ -48,6 +48,11 @@ def experiment(setting, niter):
         # Apply OOT post detection methods
         if setting.feature == 'unigram':
             max_features = setting.max_features
+            if max_features is not None:
+                try:
+                    max_features = int(max_features)
+                except ValueError:
+                    max_features = float(max_features)
             if type(max_features) == float:
                 extractor = CountVectorizerWrapper(input='content',
                                                    stop_words='english')
