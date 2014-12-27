@@ -1,6 +1,9 @@
 # Command script
 run_experiment.sh
 
+# Mac OSX
+.DS_Store
+
 # PyCharm
 .idea/
 
